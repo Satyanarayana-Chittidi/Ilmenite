@@ -749,7 +749,7 @@
 				const memoryLimit = problemHeader.querySelector('.memory-limit');
 				const inputSpec = problemStatement.querySelector('.input-specification');
 				
-				if (timeLimit && memoryLimit && inputSpec) {
+				if (timeLimit && memoryLimit) {
 					const constraintsSec = document.createElement('div');
 					constraintsSec.className = 'constraints-specification';
 					
@@ -773,7 +773,13 @@
 					constraintsText.innerHTML = formatConstraint(timeLimit) + "<br/>" + formatConstraint(memoryLimit);
 					constraintsSec.appendChild(constraintsText);
 					
-					inputSpec.parentNode.insertBefore(constraintsSec, inputSpec);
+					const firstSection = problemStatement.querySelector('.input-specification, .output-specification, .interaction, .sample-tests') || Array.from(problemStatement.querySelectorAll('.section-title')).find(el => !el.closest('.header'));
+					
+					if (firstSection && firstSection.parentNode) {
+						firstSection.parentNode.insertBefore(constraintsSec, firstSection);
+					} else {
+						problemStatement.appendChild(constraintsSec);
+					}
 					
 					timeLimit.style.display = 'none';
 					memoryLimit.style.display = 'none';
@@ -798,8 +804,18 @@
 			else if (inputEl) addHrBefore(inputEl);
 			
 			if (constraintsEl && inputEl) addHrBefore(inputEl);
+			const interactionEl = problemStatement.querySelector('.interaction');
+			if (interactionEl) addHrBefore(interactionEl);
 			addHrBefore(outputEl);
 			addHrBefore(sampleEl);
+
+			// Handle unstructured problems (e.g., run-twice communication problems)
+			if (!inputEl && !outputEl && !sampleEl) {
+				const strayTitles = Array.from(problemStatement.querySelectorAll('.section-title')).filter(el => !el.closest('.header') && !el.closest('.constraints-specification'));
+				strayTitles.forEach(title => {
+					addHrBefore(title);
+				});
+			}
 
 			// === NEW: Virtual Contest & Contest Materials Migration ===
 			let vcBox = null;
@@ -1017,4 +1033,6 @@
 
 	});
 })();
+
+
 
