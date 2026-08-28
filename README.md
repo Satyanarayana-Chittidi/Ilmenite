@@ -22,7 +22,7 @@ By eliminating the friction between reading problem statements and writing code,
 
 ---
 
-## ⚡ Power Features
+## Power Features
 
 ### 1. In-Browser VS Code Engine
 Write your solutions using the **Monaco Editor**—the exact same engine that powers Visual Studio Code, seamlessly embedded next to the problem statement.
@@ -63,7 +63,7 @@ Navigate Codeforces at the speed of thought.
 
 ---
 
-## 🚀 Installation
+## Installation
 
 Ilmenite is officially available for download on the Chrome Web Store!
 
@@ -74,6 +74,6 @@ Ilmenite is officially available for download on the Chrome Web Store!
 
 ---
 
-## 📜 License
+## License
 
 This project is entirely open-source and distributed under the **MIT License**. You are free to view the source code, modify it, and contribute. See the [LICENSE](LICENSE) file for more details.
