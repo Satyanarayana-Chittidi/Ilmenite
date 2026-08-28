@@ -58,6 +58,8 @@ export const useEditorSettings = (editorSettings: EditorSettingsTypes, setEditor
                 quickSuggestions: editorSettings.autoSuggestions,
                 suggestOnTriggerCharacters: editorSettings.autoSuggestions,
                 wordBasedSuggestions: editorSettings.autoSuggestions ? 'currentDocument' : 'off',
+                tabCompletion: 'on',
+                acceptSuggestionOnEnter: 'on',
                 cursorSmoothCaretAnimation: editorSettings.cursorSmoothCaretAnimation,
                 cursorStyle: editorSettings.cursorStyle || 'line',
             });
@@ -84,4 +86,5 @@ export const useEditorSettings = (editorSettings: EditorSettingsTypes, setEditor
         saveEditorSettings,
     }
 }
+
 

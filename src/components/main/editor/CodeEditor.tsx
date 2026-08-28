@@ -1,12 +1,18 @@
 ﻿import React, { useEffect, useRef } from 'react';
-import * as monaco from 'monaco-editor';
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import 'monaco-editor/esm/vs/language/typescript/monaco.contribution';
+import 'monaco-editor/esm/vs/language/css/monaco.contribution';
+import 'monaco-editor/esm/vs/language/json/monaco.contribution';
+import 'monaco-editor/esm/vs/editor/contrib/find/browser/findController.js';
+import 'monaco-editor/esm/vs/editor/contrib/suggest/browser/suggestController.js';
+import 'monaco-editor/esm/vs/editor/contrib/snippet/browser/snippetController2.js';
+import 'monaco-editor/esm/vs/editor/contrib/wordHighlighter/browser/wordHighlighter.js';
 import { CodeEditorProps, EditorSettingsTypes, IVimEditor } from '../../../types/types';
 import themesJSON from '../../../../themes/themelist.json';
 import { useEditorSettings } from '../../../utils/hooks/useEditorSettings';
 import { useCFStore } from '../../../zustand/useCFStore';
 import { initVimMode } from 'monaco-vim';
 import { saveCodeForSlug } from '../../../utils/services/storageService';
-import { loadCodeWithCursor } from '../../../utils/codeHandlers';
 import { registerCustomSnippets } from '../../../utils/snippets/registerSnippets';
 import { useCustomSnippets } from '../../../utils/hooks/useCustomSnippets';
 
@@ -25,7 +31,8 @@ const resolveTheme = (appTheme: string | undefined, editorTheme: string) => {
 const CodeEditor = React.memo(({ monacoInstanceRef, language, fontSize, templateCode, theme, isMainEditor }: CodeEditorProps) => {
     const editorSettings = useCFStore((state) => state.editorSettings);
     const setEditorSettings = useCFStore((state) => state.setEditorSettings);
-        const { getEditorSettings } = useEditorSettings(editorSettings, setEditorSettings);
+    const isPlusUser = useCFStore((state) => state.isPlusUser);
+    const { getEditorSettings } = useEditorSettings(editorSettings, setEditorSettings);
     const editorRef = useRef<HTMLDivElement>(null);
     const vimStatusRef = useRef<HTMLDivElement>(null);
     const { customSnippets } = useCustomSnippets();
@@ -54,7 +61,7 @@ const CodeEditor = React.memo(({ monacoInstanceRef, language, fontSize, template
                 const editorSettings:EditorSettingsTypes = getEditorSettings();
                 monacoInstanceRef.current = monaco.editor.create(editorRef.current, {
                     language: language,
-                    theme: resolveTheme(theme, editorSettings.theme),
+                    theme: resolveTheme(theme, !isPlusUser ? 'auto' : editorSettings.theme),
                     fontSize: fontSize,
                     tabSize: editorSettings.indentSize,
                     automaticLayout: true,
@@ -79,26 +86,26 @@ const CodeEditor = React.memo(({ monacoInstanceRef, language, fontSize, template
                     overviewRulerLanes: 0,
                     lineNumbersMinChars: 4,
                     lineNumbers: editorSettings.lineNumbers,
-                    suggestOnTriggerCharacters: editorSettings.autoSuggestions,
-                    quickSuggestions: editorSettings.autoSuggestions,
-                    wordBasedSuggestions: editorSettings.autoSuggestions ? 'currentDocument' : 'off',
-                    cursorSmoothCaretAnimation: editorSettings.cursorSmoothCaretAnimation,
+                    suggestOnTriggerCharacters: !isPlusUser ? false : editorSettings.autoSuggestions,
+                    quickSuggestions: !isPlusUser ? false : editorSettings.autoSuggestions,
+                    wordBasedSuggestions: !isPlusUser ? 'off' : (editorSettings.autoSuggestions ? 'currentDocument' : 'off'),
+                    cursorSmoothCaretAnimation: !isPlusUser ? 'off' : editorSettings.cursorSmoothCaretAnimation,
                     cursorStyle: editorSettings.cursorStyle || 'line',
+                    tabCompletion: 'on',
+                    acceptSuggestionOnEnter: 'on',
                 });
 
                 if (templateCode) {
-                    loadCodeWithCursor(monacoInstanceRef.current, templateCode, true);
+                    monacoInstanceRef.current.setValue(templateCode);
                 }
             }
 
-            if (monacoInstanceRef.current) {
-                const vimEditor = monacoInstanceRef.current as IVimEditor;
-                vimEditor.vimStatusRef = vimStatusRef;
+            const vimEditor = monacoInstanceRef.current! as IVimEditor
+            vimEditor.vimStatusRef = vimStatusRef;
 
-                const currentKeyBinding = editorSettings.keyBinding;
-                if(currentKeyBinding == "vim") {
-                    vimEditor.vimMode = initVimMode(monacoInstanceRef.current, vimStatusRef.current);
-                }
+            const currentKeyBinding = !isPlusUser ? 'standard' : editorSettings.keyBinding;
+            if(currentKeyBinding == "vim") {
+                vimEditor.vimMode = initVimMode(monacoInstanceRef.current, vimStatusRef.current);
             }
         };
 
@@ -114,17 +121,17 @@ const CodeEditor = React.memo(({ monacoInstanceRef, language, fontSize, template
 
     useEffect(() => {
         if (monacoInstanceRef.current && monaco) {
-            monaco.editor.setTheme(resolveTheme(theme, editorSettings.theme));
+            monaco.editor.setTheme(resolveTheme(theme, !isPlusUser ? 'auto' : editorSettings.theme));
             
             monacoInstanceRef.current.updateOptions({
-                suggestOnTriggerCharacters: editorSettings.autoSuggestions,
-                quickSuggestions: editorSettings.autoSuggestions,
-                wordBasedSuggestions: editorSettings.autoSuggestions ? 'currentDocument' : 'off',
-                cursorSmoothCaretAnimation: editorSettings.cursorSmoothCaretAnimation,
+                suggestOnTriggerCharacters: !isPlusUser ? false : editorSettings.autoSuggestions,
+                quickSuggestions: !isPlusUser ? false : editorSettings.autoSuggestions,
+                wordBasedSuggestions: !isPlusUser ? 'off' : (editorSettings.autoSuggestions ? 'currentDocument' : 'off'),
+                cursorSmoothCaretAnimation: !isPlusUser ? 'off' : editorSettings.cursorSmoothCaretAnimation,
             });
 
             const vimEditor = monacoInstanceRef.current as any;
-            const currentKeyBinding = editorSettings.keyBinding;
+            const currentKeyBinding = !isPlusUser ? 'standard' : editorSettings.keyBinding;
             if(currentKeyBinding == "vim") {
                 if(!vimEditor.vimMode && vimEditor.vimStatusRef?.current) {
                     vimEditor.vimMode = initVimMode(monacoInstanceRef.current, vimEditor.vimStatusRef.current);
@@ -136,7 +143,7 @@ const CodeEditor = React.memo(({ monacoInstanceRef, language, fontSize, template
                 }
             }
         }
-    }, [theme, editorSettings]);
+    }, [theme, editorSettings, isPlusUser]);
 
     useEffect(() => {
         let debounceTimer: number | null = null;
@@ -154,17 +161,9 @@ const CodeEditor = React.memo(({ monacoInstanceRef, language, fontSize, template
                     debounceTimer = window.setTimeout(() => {
                         const editor = monacoInstanceRef.current;
                         if (editor) {
-                            saveCodeForSlug(slug, editor, useCFStore.getState().totalSize, useCFStore.getState().setTotalSize, false);
+                            saveCodeForSlug(slug, editor, useCFStore.getState().totalSize, useCFStore.getState().setTotalSize);
                         }
                     }, 1000);
-                });
-
-                monacoInstanceRef.current.onDidBlurEditorWidget(() => {
-                    const slug = useCFStore.getState().currentSlug;
-                    const editor = monacoInstanceRef.current;
-                    if (slug && editor) {
-                        saveCodeForSlug(slug, editor, useCFStore.getState().totalSize, useCFStore.getState().setTotalSize, true);
-                    }
                 });
             }
         }, 100);
@@ -185,7 +184,3 @@ const CodeEditor = React.memo(({ monacoInstanceRef, language, fontSize, template
 });
 
 export default CodeEditor;
-
-
-
-
