@@ -93,9 +93,38 @@ const CodeEditor = React.memo(({ monacoInstanceRef, language, fontSize, template
                     overviewRulerLanes: 0,
                     lineNumbersMinChars: 4,
                     lineNumbers: editorSettings.lineNumbers,
-                    suggestOnTriggerCharacters: editorSettings.autoSuggestions,
-                    quickSuggestions: editorSettings.autoSuggestions,
+                    suggestOnTriggerCharacters: true,
+                      quickSuggestions: true,
                     wordBasedSuggestions: editorSettings.autoSuggestions ? 'currentDocument' : 'off',
+                      suggest: {
+                          showKeywords: editorSettings.autoSuggestions,
+                          showWords: editorSettings.autoSuggestions,
+                          showSnippets: true,
+                          showClasses: editorSettings.autoSuggestions,
+                          showFunctions: editorSettings.autoSuggestions,
+                          showVariables: editorSettings.autoSuggestions,
+                          showConstants: editorSettings.autoSuggestions,
+                          showConstructors: editorSettings.autoSuggestions,
+                          showEnumMembers: editorSettings.autoSuggestions,
+                          showEnums: editorSettings.autoSuggestions,
+                          showEvents: editorSettings.autoSuggestions,
+                          showFields: editorSettings.autoSuggestions,
+                          showFiles: editorSettings.autoSuggestions,
+                          showFolders: editorSettings.autoSuggestions,
+                          showInterfaces: editorSettings.autoSuggestions,
+                          showIssues: editorSettings.autoSuggestions,
+                          showMethods: editorSettings.autoSuggestions,
+                          showModules: editorSettings.autoSuggestions,
+                          showOperators: editorSettings.autoSuggestions,
+                          showProperties: editorSettings.autoSuggestions,
+                          showReferences: editorSettings.autoSuggestions,
+                          showStructs: editorSettings.autoSuggestions,
+                          showTypeParameters: editorSettings.autoSuggestions,
+                          showUnits: editorSettings.autoSuggestions,
+                          showUsers: editorSettings.autoSuggestions,
+                          showValues: editorSettings.autoSuggestions,
+                          showColors: editorSettings.autoSuggestions
+                      },
                     cursorSmoothCaretAnimation: editorSettings.cursorSmoothCaretAnimation,
                     cursorStyle: editorSettings.cursorStyle || 'line',
                 });
@@ -131,9 +160,38 @@ const CodeEditor = React.memo(({ monacoInstanceRef, language, fontSize, template
             monaco.editor.setTheme(resolveTheme(theme, editorSettings.theme));
             
             monacoInstanceRef.current.updateOptions({
-                suggestOnTriggerCharacters: editorSettings.autoSuggestions,
-                quickSuggestions: editorSettings.autoSuggestions,
+                suggestOnTriggerCharacters: true,
+                      quickSuggestions: true,
                 wordBasedSuggestions: editorSettings.autoSuggestions ? 'currentDocument' : 'off',
+                      suggest: {
+                          showKeywords: editorSettings.autoSuggestions,
+                          showWords: editorSettings.autoSuggestions,
+                          showSnippets: true,
+                          showClasses: editorSettings.autoSuggestions,
+                          showFunctions: editorSettings.autoSuggestions,
+                          showVariables: editorSettings.autoSuggestions,
+                          showConstants: editorSettings.autoSuggestions,
+                          showConstructors: editorSettings.autoSuggestions,
+                          showEnumMembers: editorSettings.autoSuggestions,
+                          showEnums: editorSettings.autoSuggestions,
+                          showEvents: editorSettings.autoSuggestions,
+                          showFields: editorSettings.autoSuggestions,
+                          showFiles: editorSettings.autoSuggestions,
+                          showFolders: editorSettings.autoSuggestions,
+                          showInterfaces: editorSettings.autoSuggestions,
+                          showIssues: editorSettings.autoSuggestions,
+                          showMethods: editorSettings.autoSuggestions,
+                          showModules: editorSettings.autoSuggestions,
+                          showOperators: editorSettings.autoSuggestions,
+                          showProperties: editorSettings.autoSuggestions,
+                          showReferences: editorSettings.autoSuggestions,
+                          showStructs: editorSettings.autoSuggestions,
+                          showTypeParameters: editorSettings.autoSuggestions,
+                          showUnits: editorSettings.autoSuggestions,
+                          showUsers: editorSettings.autoSuggestions,
+                          showValues: editorSettings.autoSuggestions,
+                          showColors: editorSettings.autoSuggestions
+                      },
                 cursorSmoothCaretAnimation: editorSettings.cursorSmoothCaretAnimation,
             });
 
@@ -199,4 +257,6 @@ const CodeEditor = React.memo(({ monacoInstanceRef, language, fontSize, template
 });
 
 export default CodeEditor;
+
+
 
