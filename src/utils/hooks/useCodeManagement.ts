@@ -1,7 +1,7 @@
-import { useCFStore } from '../../zustand/useCFStore';
+﻿import { useCFStore } from '../../zustand/useCFStore';
 import { getValueFromLanguage } from '../helper';
 import { loadCodeWithCursor } from '../codeHandlers';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monaco from 'monaco-editor';
 import { browserAPI } from '../browser/browserDetect';
 import LZString from 'lz-string';
 
@@ -121,3 +121,4 @@ export const useCodeManagement = (monacoInstanceRef: React.MutableRefObject<mona
         handleRedirectToLatestSubmission
     };
 };
+

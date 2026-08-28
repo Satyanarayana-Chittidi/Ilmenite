@@ -1,4 +1,4 @@
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+﻿import * as monaco from 'monaco-editor';
 import { CustomSnippet } from '../../types/types';
 
 let currentSnippetProvider: monaco.IDisposable | null = null;
@@ -45,3 +45,4 @@ export const registerCustomSnippets = (
 
     registeredLanguage = language;
 };
+

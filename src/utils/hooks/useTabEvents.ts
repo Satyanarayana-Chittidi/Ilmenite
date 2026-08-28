@@ -1,11 +1,11 @@
-import { useCFStore } from '../../zustand/useCFStore';
+﻿import { useCFStore } from '../../zustand/useCFStore';
 import { getSlug, getCodeMap } from '../helper';
 import { saveCodeForSlug, saveTestCaseForSlug } from '../services/storageService';
 import { fetchCloudCode } from '../services/cloudCodeService';
 import { loadCodeWithCursor } from '../codeHandlers';
 import { accessRestrictionMessage } from '../../data/constants';
 import { useTestCases } from './useTestCases';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monaco from 'monaco-editor';
 import LZString from 'lz-string';
 
 export const useTabEvents = () => {
@@ -80,3 +80,4 @@ export const useTabEvents = () => {
     };
     return { handleTabEvents };
 };
+

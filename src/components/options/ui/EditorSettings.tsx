@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Code, Settings, Palette, Eye } from 'lucide-react';
 import PremiumSelect from '../../global/PremiumSelect';
@@ -6,7 +6,7 @@ import { useCFStore } from '../../../zustand/useCFStore';
 import { CursorSmoothCaretAnimation, CursorStyle, EditorSettingsTypes, KeyBinding, LineNumber } from '../../../types/types';
 import { useEditorSettings } from '../../../utils/hooks/useEditorSettings';
 import CodeEditor from '../../main/editor/CodeEditor';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monaco from 'monaco-editor';
 import { PREVIEW_CODE } from '../../../data/constants';
 import { formatCode } from '../../../utils/helper';
 
@@ -352,3 +352,4 @@ const EditorSettings: React.FC<EditorSettingsProps> = ({ isOpen, onClose, theme 
 };
 
 export default EditorSettings;
+

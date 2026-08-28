@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, Suspense } from 'react';
+﻿import React, { useRef, useEffect, useState, Suspense } from 'react';
 import { useCFStore } from '../../zustand/useCFStore';
 import { formatCode, getCodeMap, getSlug } from '../../utils/helper';
 import TopBar from './editor/TopBar';
@@ -17,7 +17,7 @@ import { accessRestrictionMessage } from '../../data/constants';
 import ApiLimitAlert from '../global/popups/ApiLimitAlert';
 import { AuthForm } from '../auth/AuthForm';
 const CodeEditor = React.lazy(() => import('./editor/CodeEditor'));
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monaco from 'monaco-editor';
 import { browserAPI } from '../../utils/browser/browserDetect';
 
 interface MainProps {
@@ -245,3 +245,4 @@ const Main: React.FC<MainProps> = ({ showOptionsRef, setShowOptions, theme }) =>
     );
 };
 export default React.memo(Main);
+

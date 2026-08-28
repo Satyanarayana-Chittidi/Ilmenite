@@ -1,4 +1,4 @@
-import { handleSaveTemplate } from "../../utils/localStorageHelper";
+﻿import { handleSaveTemplate } from "../../utils/localStorageHelper";
 import React, { useEffect, useRef, useState } from "react";
 import { SettingsProps } from "../../types/types";
 import DeleteCodesConfirmationPopup from "../global/popups/DeleteCodesConfirmationPopup";
@@ -8,7 +8,7 @@ import LZString from 'lz-string';
 import Options from './ui/Options';
 import CodeEditor from "../main/editor/CodeEditor";
 import { useCFStore } from "../../zustand/useCFStore";
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monaco from 'monaco-editor';
 import { browserAPI } from "../../utils/browser/browserDetect";
 import { defaultThemeSettings } from "../../utils/themeUtils";
 import { Save } from "lucide-react";
@@ -107,3 +107,4 @@ const Settings: React.FC<SettingsProps> = ({ setShowOptions, theme, setTheme }) 
 };
 
 export default React.memo(Settings);
+

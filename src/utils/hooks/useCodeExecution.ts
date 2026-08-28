@@ -1,4 +1,4 @@
-import { useCFStore } from '../../zustand/useCFStore';
+﻿import { useCFStore } from '../../zustand/useCFStore';
 import { adjustCodeForJudge0 } from '../codeAdjustments';
 import { EXECUTE_CODE_LIMIT } from '../../data/constants';
 import { useState, MutableRefObject } from 'react';
@@ -6,7 +6,7 @@ import { getProblemName } from '../dom/getProblemName';
 import { getUserId } from '../dom/getUserId';
 import { getTimeLimit } from '../dom/getTimeLimit';
 import { getProblemUrl } from '../dom/getProblemUrl';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monaco from 'monaco-editor';
 import { saveCodeForSlug } from '../services/storageService';
 
 const languageMap: { [key: string]: { id: number, domain: string } } = {
@@ -315,3 +315,4 @@ export const useCodeExecution = (editorRef: MutableRefObject<monaco.editor.IStan
         setShowApiLimitAlert
     };
 };
+

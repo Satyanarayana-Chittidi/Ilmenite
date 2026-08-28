@@ -1,4 +1,4 @@
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+﻿import * as monaco from 'monaco-editor';
 import { useEditorSettings } from './hooks/useEditorSettings';
 const { getEditorSettings } = useEditorSettings(useCFStore.getState().editorSettings, useCFStore.getState().setEditorSettings);
 

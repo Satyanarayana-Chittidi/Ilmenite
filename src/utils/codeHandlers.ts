@@ -1,4 +1,4 @@
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+﻿import * as monaco from 'monaco-editor';
 
 export const loadCodeWithCursor = (editor: monaco.editor.IStandaloneCodeEditor | null, code: string, focusEditor: boolean = false) => {
     if (!editor) {
@@ -44,3 +44,4 @@ export const loadCodeWithCursor = (editor: monaco.editor.IStandaloneCodeEditor |
         editor.focus();
     }
 };
+

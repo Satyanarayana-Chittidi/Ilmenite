@@ -1,5 +1,5 @@
-import {toast} from "sonner";
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+﻿import {toast} from "sonner";
+import * as monaco from 'monaco-editor';
 import { saveCloudTemplate } from './services/cloudCodeService';
 import { useCFStore } from '../zustand/useCFStore';
 import LZString from 'lz-string';
@@ -30,3 +30,4 @@ export const handleSaveTemplate = async (editor: monaco.editor.IStandaloneCodeEd
         await saveCloudTemplate(compressedTemplate);
     }
 };
+

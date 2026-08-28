@@ -1,5 +1,5 @@
-import { syncAllSettingsToCloud } from '../services/cloudCodeService';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+﻿import { syncAllSettingsToCloud } from '../services/cloudCodeService';
+import * as monaco from 'monaco-editor';
 import { EditorSettingsTypes, IVimEditor } from '../../types/types';
 import { DEFAULT_EDITOR_SETTINGS } from '../../data/constants';
 import { initVimMode } from 'monaco-vim';

@@ -1,7 +1,7 @@
-import { getProblemName } from "../dom/getProblemName";
+﻿import { getProblemName } from "../dom/getProblemName";
 import { getProblemUrl } from "../dom/getProblemUrl";
 import { getUserId } from "../dom/getUserId";
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monaco from 'monaco-editor';
 import { browserAPI } from "../browser/browserDetect";
 import { useCFStore } from "../../zustand/useCFStore";
 import { getValueFromLanguage } from "../helper";
@@ -113,3 +113,4 @@ export const handleSubmission = async (editor: monaco.editor.IStandaloneCodeEdit
         setIsSubmitting(false);
     }
 };
+

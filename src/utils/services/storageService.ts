@@ -1,7 +1,7 @@
-import { CodeEntry, TestCaseArray } from '../../types/types';
+﻿import { CodeEntry, TestCaseArray } from '../../types/types';
 import { getCodeMap, getSlugQueue, getTestCaseMap, getTestCaseQueue } from '../helper';
 import { MAX_PROBLEM_IO_SIZE, SINGLE_CODE_LIMIT_BYTES, STORAGE_LIMIT_BYTES } from '../../data/constants';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monaco from 'monaco-editor';
 import { useCFStore } from '../../zustand/useCFStore';
 import { saveCloudCode } from './cloudCodeService';
 import LZString from 'lz-string';
@@ -148,3 +148,4 @@ export const syncCurrentCodeToCloud = async (slug: string) => {
         await saveCloudCode(slug, entry.code);
     }
 };
+
