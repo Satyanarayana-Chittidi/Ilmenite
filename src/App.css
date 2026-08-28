@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+    color-scheme: light dark;
+    /* color: #333;
+    background-color: #ffffff; */
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+    overscroll-behavior: none;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    overscroll-behavior: none;
+    background-color: transparent !important;
+}
+
+#root {
+    width: 100%;
+    height: 100%;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar:horizontal {
+    display: none;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--scrollbar-track-bg);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb-bg);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover-bg);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner {
+    background: var(--scrollbar-track-bg);
+}
+
+::-webkit-resizer {
+    background-color: transparent;
+    background-image: linear-gradient(135deg, transparent 50%, var(--scrollbar-thumb-bg) 50%, var(--scrollbar-thumb-bg) 60%, transparent 60%, transparent 75%, var(--scrollbar-thumb-bg) 75%, var(--scrollbar-thumb-bg) 85%, transparent 85%);
+    background-size: 8px 8px;
+    background-position: bottom right;
+    background-repeat: no-repeat;
+}
+
+/* Light Theme Scrollbar */
+:root {
+    --scrollbar-track-bg: #e5e7eb; /* Tailwind gray-200 */
+    --scrollbar-thumb-bg: #9ca3af; /* Tailwind gray-400 */
+    --scrollbar-thumb-hover-bg: #6b7280; /* Tailwind gray-500 */
+}
+
+/* Dark Theme Scrollbar */
+.dark {
+    --scrollbar-track-bg: #2a2a2a;
+    --scrollbar-thumb-bg: #555;
+    --scrollbar-thumb-hover-bg: #666;
+}
+
+/* Monaco Editor Scrollbar overrides */
+.monaco-scrollable-element > .scrollbar > .slider {
+    border-radius: 10px;
+    background: var(--scrollbar-thumb-bg) !important;
+}
+.monaco-scrollable-element > .scrollbar:hover > .slider {
+    background: var(--scrollbar-thumb-hover-bg) !important;
+}
+.dark .monaco-scrollable-element > .scrollbar > .slider {
+    background: #555 !important;
+}
+.dark .monaco-scrollable-element > .scrollbar:hover > .slider {
+    background-color: rgba(120, 120, 120, 0.8) !important;
+}
+
+.resizer-handle {
+    top: var(--resizer-top);
+}
+
+.monaco-editor .minimap {
+    right: 0 !important;
+    left: auto !important;
+}

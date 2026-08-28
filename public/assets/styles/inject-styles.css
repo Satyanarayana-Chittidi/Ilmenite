@@ -1,0 +1,360 @@
+.login-box-custom {
+    background-color: #f3f4f6 !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 20px !important;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center !important;
+    align-items: center;
+    gap: 20px;
+}
+
+.register-box-custom {
+    background-color: #f3f4f6 !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 20px !important;
+    height: 500px !important;
+    width: 500px !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: center !important;
+    align-items: center;
+    padding: 5px;
+}
+
+.title-custom {
+    text-align: center !important;
+    font-size: 40px;
+    font-weight: bold;
+    padding: 20px !important;
+}
+
+.field-label-custom {
+    text-align: left;
+    color: #555;
+    font-size: 1.2rem;
+}
+
+.input-field-custom {
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    background-color: #f9fafb !important;
+    font-size: 1rem;
+    color: #333;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.input-field-custom:focus {
+    border-color: #4caf50;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+}
+
+.login-button-custom {
+    margin-left: 40% !important;
+    background-color: #423dc8 !important;
+    width: 80px !important;
+    font-weight: 500 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    color: white !important;
+    font-weight: 600 !important;
+    border: none !important;
+    padding: 0px !important;
+}
+
+.bottom-links-custom {
+    width: auto;
+    border: none;
+    background-color: transparent !important;
+    border: none !important;
+    border-radius: 8px;
+    margin: 20px auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.forgot-password-custom {
+    font-size: 1.1rem;
+    cursor: pointer;
+    color: #4027e9 !important;
+}
+
+div:has(.forgot-password-custom) {
+    margin-top: 10px;
+}
+
+.forgot-password-custom:hover {
+    text-decoration: underline;
+}
+
+.login-google-custom {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 8px;
+    padding: 10px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 15px;
+    color: #333;
+    transition: background-color 0.3s;
+}
+
+td:has(.login-google-custom) {
+    display: flex;
+    justify-content: center;
+}
+
+.login-google-custom img {
+    width: 30px;
+    height: 30px;
+    margin-right: 8px;
+}
+
+.custom-image {
+    filter: invert(1) hue-rotate(360deg);
+}
+
+.custom-cell div:nth-child(2) {
+    margin-top: 5px;
+    width: 100% !important;
+    text-align: left !important;
+}
+
+.custom-cell a {
+    color: #1e90ff;
+    text-decoration: none;
+    font-weight: 400 !important;
+}
+
+.custom-cell .notice {
+    margin-bottom: 5px;
+    color: #d3d3d3;
+}
+
+.custom-cell a:hover {
+    text-decoration: underline;
+    color: #87cefa;
+}
+
+.custom-cell .notice:hover {
+    color: #ffffff;
+}
+
+.custom-cell-fifth {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+
+
+
+
+
+
+html::-webkit-scrollbar:horizontal,
+body::-webkit-scrollbar:horizontal,
+#pageContent::-webkit-scrollbar:horizontal,
+div#body::-webkit-scrollbar:horizontal,
+body.cf-ilmenite-custom-scrollbars::-webkit-scrollbar:horizontal {
+    display: none !important;
+    height: 0 !important;
+}
+
+html::-webkit-scrollbar,
+body.cf-ilmenite-custom-scrollbars::-webkit-scrollbar,
+body.cf-ilmenite-custom-scrollbars *::-webkit-scrollbar {
+    width: 8px !important;
+    height: 8px !important;
+    background-color: transparent !important;
+}
+
+html::-webkit-scrollbar-track,
+body.cf-ilmenite-custom-scrollbars::-webkit-scrollbar-track,
+body.cf-ilmenite-custom-scrollbars *::-webkit-scrollbar-track {
+    background-color: #e5e7eb !important;
+}
+
+html::-webkit-scrollbar-thumb,
+body.cf-ilmenite-custom-scrollbars::-webkit-scrollbar-thumb,
+body.cf-ilmenite-custom-scrollbars *::-webkit-scrollbar-thumb {
+    background-color: #9ca3af !important;
+    border-radius: 4px !important;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body.cf-ilmenite-custom-scrollbars::-webkit-scrollbar-thumb:hover,
+body.cf-ilmenite-custom-scrollbars *::-webkit-scrollbar-thumb:hover {
+    background-color: #6b7280 !important;
+}
+
+html::-webkit-scrollbar-corner,
+body.cf-ilmenite-custom-scrollbars::-webkit-scrollbar-corner,
+body.cf-ilmenite-custom-scrollbars *::-webkit-scrollbar-corner {
+    background-color: transparent !important;
+}
+
+body:has(.problem-statement) #sidebar {
+    display: none !important;
+}
+
+/* Allow Codeforces to actually shrink instead of clipping under the sidepanel */
+body:has(.problem-statement),
+body:has(.problem-statement) div#body,
+body:has(.problem-statement) #pageContent,
+body:has(.problem-statement) .menu-box,
+body:has(.problem-statement) #header,
+body:has(.problem-statement) #footer {
+    min-width: 0 !important;
+}
+
+/* ONLY when the panel is open, stretch the layout perfectly to fill the remaining space */
+body.cf-ilmenite-panel-open:has(.problem-statement) div#body {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+body:has(.problem-statement) div#body {
+    padding: 10px 1em 0 1em !important;
+}
+
+/* Ensure wide elements in the problem statement don't trigger horizontal scrollbars */
+body.cf-ilmenite-panel-open:has(.problem-statement) .problem-statement {
+    overflow-x: hidden !important; 
+    word-break: break-word !important;
+}
+  body.cf-ilmenite-panel-open:has(.problem-statement) .problem-statement pre,
+  body.cf-ilmenite-panel-open:has(.problem-statement) .problem-statement .MathJax_Display {
+      overflow-x: auto !important;
+      overflow-y: hidden !important;
+      max-width: 100% !important;
+  }
+  
+  /* Add tiny padding to prevent math from clipping when overflow-y is hidden */
+  .MathJax_Display {
+      padding-top: 2px !important;
+      padding-bottom: 2px !important;
+  }
+
+/* Allow the primary header bar to expand its height when items wrap on narrow screens */
+body:has(.problem-statement) .menu-box {
+    height: auto !important;
+    width: fit-content !important;
+    overflow: hidden !important;
+    flex-shrink: 0 !important;
+}
+body:has(.problem-statement) .menu-list-container,
+body:has(.problem-statement) .menu-list {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    height: auto !important;
+}
+
+body:has(.problem-statement) form[action="/search"],
+body:has(.problem-statement) .button-up,
+body:has(.problem-statement) .lang-chooser > div:first-child {
+    display: none !important;
+}
+
+body:has(.problem-statement) #pageContent {
+    margin-top: 0 !important;
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+}
+
+
+body:has(.problem-statement) .menu-list li:has(a[href^="/catalog"]),
+body:has(.problem-statement) .menu-list li:has(a[href^="/groups"]),
+body:has(.problem-statement) .menu-list li:has(a[href^="/edu"]),
+body:has(.problem-statement) .menu-list li:has(a[href^="/apiHelp"]),
+body:has(.problem-statement) .menu-list li:has(a[href^="/calendar"]),
+body:has(.problem-statement) .menu-list li:has(a[href^="/help"]) {
+    display: none !important;
+}
+
+
+
+
+
+
+/* Add 5px left padding to all content under problem subheadings */
+.problem-statement .constraints-specification > *:not(.section-title),
+.problem-statement .input-specification > *:not(.section-title),
+.problem-statement .output-specification > *:not(.section-title),
+.problem-statement .sample-tests > *:not(.section-title),
+.problem-statement .note > *:not(.section-title) {
+    padding-left: 5px !important;
+}
+
+/* Add 3px bottom margin to section titles */
+.problem-statement .section-title {
+    margin-bottom: 3px !important;
+}
+
+/* Ensure gap is handled via JS inline styles on the header */
+
+/* Fix second level menu clipping when wrapping, ONLY on problem pages to prevent layout breaks elsewhere */
+body:has(.problem-statement) div#pageContent div.second-level-menu {
+    height: auto !important;
+    min-height: min-content !important;
+    max-height: none !important;
+    overflow: visible !important;
+    margin-bottom: 0 !important;
+    position: relative !important;
+    clear: both !important;
+}
+body:has(.problem-statement) div#pageContent div.second-level-menu ul.second-level-menu-list {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    height: auto !important;
+    min-height: min-content !important;
+    max-height: none !important;
+    row-gap: 6px !important;
+    position: relative !important;
+}
+body:has(.problem-statement) div#pageContent div.problemindexholder {
+    clear: both !important;
+}
+
+body:has(.problem-statement) div#pageContent div.menu-list-container {
+    height: auto !important;
+}
+body:has(.problem-statement) div#pageContent ul.menu-list {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    height: auto !important;
+    min-height: min-content !important;
+    max-height: none !important;
+    row-gap: 6px !important;
+}
+
+body:has(.problem-statement) #header {
+    display: none !important;
+}
+
+/* Hide footer globally */
+#footer {
+    display: none !important;
+}
+
+/* Change the profile link font at the top to normal font-weight */
+#header a[href^="/profile/"],
+.lang-chooser a[href^="/profile/"] {
+    font-weight: normal !important;
+}

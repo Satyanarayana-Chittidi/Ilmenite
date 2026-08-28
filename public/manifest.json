@@ -1,0 +1,74 @@
+{
+  "manifest_version": 3,
+  "version": "1.2.5",
+  "name": "Ilmenite",
+  "description": "Provides dark theme and code runner for Codeforces",
+  "author": "Chittidi Satyanarayana",
+  "short_name": "Ilmenite",
+  "action": {
+    "default_popup": "index.html"
+  },
+  "permissions": [
+    "tabs",
+    "storage",
+    "unlimitedStorage",
+    "activeTab",
+    "scripting",
+    "identity"
+  ],
+  "host_permissions": ["https://codeforces.com/*", "https://www.onlinegdb.com/*"],
+  "icons": {
+    "128": "assets/icons/ilmenite_icon.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["assets/scripts/ftaa-script.js", "index.html", "*.js", "*.worker.js", "assets/*"],
+      "matches": ["https://codeforces.com/*"]
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self';"
+  },
+  "background": {
+    "service_worker": "assets/scripts/serviceWorker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://codeforces.com/*"],
+      "exclude_matches": ["https://codeforces.com/api/*"],
+      "all_frames": true,
+      "css": ["assets/styles/inject-styles.css"],
+      "js": [
+        "assets/scripts/content.js",
+        "assets/scripts/changeUIFunctions/loginPageChanges.js",
+        "assets/scripts/changeUIFunctions/problemSetPageChanges.js",
+        "assets/scripts/darkModeFunctions/darkMode.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://codeforces.com/*"
+      ],
+      "exclude_matches": [
+        "https://codeforces.com/api/*"
+      ],
+      "js": [
+        "assets/scripts/iframeInject.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://ilmenite.vercel.app/*",
+        "http://localhost:5500/*",
+        "https://ilmenite.app/*",
+        "https://*.ilmenite.app/*"
+      ],
+      "js": [
+        "assets/scripts/landingSync.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}
