@@ -1,61 +1,21 @@
-Ilmenite - Proprietary License
+﻿MIT License
 
-Copyright (c) 2026 Chittidi Satyanarayana. All rights reserved.
+Copyright (c) 2026 Satyanarayana Chittidi
 
-This software and associated documentation files (the "Software") are the
-proprietary property of Chittidi Satyanarayana. Unauthorized copying,
-modification, distribution, or use of this Software, in whole or in part,
-is strictly prohibited without prior written permission from the copyright
-holder.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-TERMS AND CONDITIONS
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-1. GRANT OF LICENSE
-   This Software is licensed, not sold. A valid subscription grants the end
-   user a limited, non-exclusive, non-transferable, revocable license to use
-   the Software solely for personal, non-commercial purposes in accordance
-   with the subscription terms.
-
-2. RESTRICTIONS
-   You may NOT:
-   (a) Copy, reproduce, or duplicate the Software or any portion thereof;
-   (b) Modify, adapt, translate, reverse engineer, decompile, or disassemble
-       the Software;
-   (c) Distribute, sublicense, lease, rent, or lend the Software to any
-       third party;
-   (d) Remove or alter any proprietary notices, labels, or marks on the
-       Software;
-   (e) Use the Software to create derivative works or competing products.
-
-3. INTELLECTUAL PROPERTY
-   All rights, title, and interest in and to the Software, including all
-   intellectual property rights, remain with the copyright holder. This
-   license does not grant you any ownership rights to the Software.
-
-4. SUBSCRIPTION
-   Certain features of the Software require an active paid subscription.
-   Access to premium features is contingent upon maintaining a valid
-   subscription. The copyright holder reserves the right to modify
-   subscription terms and pricing.
-
-5. TERMINATION
-   This license is effective until terminated. It will terminate automatically
-   if you fail to comply with any term of this agreement. Upon termination,
-   you must cease all use of the Software and destroy all copies.
-
-6. DISCLAIMER OF WARRANTIES
-   THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
-
-7. LIMITATION OF LIABILITY
-   IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES,
-   OR OTHER LIABILITY ARISING FROM THE USE OF OR INABILITY TO USE THE
-   SOFTWARE.
-
-8. THIRD-PARTY SOFTWARE
-   This Software includes components from third-party open-source projects,
-   which are subject to their own license terms. See THIRD_PARTY_NOTICES for
-   details.
-
-For licensing inquiries, contact: chsatyanarayana3936@gmail.com
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
