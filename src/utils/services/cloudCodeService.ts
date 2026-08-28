@@ -1,4 +1,4 @@
-import { supabaseClient as supabase } from '../supabaseClient';
+﻿import { supabaseClient as supabase } from '../supabaseClient';
 import LZString from 'lz-string';
 import { useCFStore } from '../../zustand/useCFStore';
 import { toast } from 'sonner';
@@ -292,10 +292,10 @@ export const syncSettingsFromCloud = async () => {
         if (data) {
             if (data.settings) {
                 if (data.settings.editorSettings) {
-                    localStorage.setItem('editorSettings', JSON.stringify(data.settings.editorSettings));
+                    useCFStore.getState().setEditorSettings(data.settings.editorSettings);
                 }
                 if (data.settings.shortcutSettings) {
-                    localStorage.setItem('shortcutSettings', JSON.stringify(data.settings.shortcutSettings));
+                    useCFStore.getState().setShortcutSettings(data.settings.shortcutSettings);
                 }
                 if (data.settings.themeCustomSettings) {
                     localStorage.setItem('themeCustomSettings', JSON.stringify(data.settings.themeCustomSettings));
@@ -307,7 +307,7 @@ export const syncSettingsFromCloud = async () => {
                 }
             }
             if (data.snippets) {
-                localStorage.setItem('customSnippets', JSON.stringify(data.snippets));
+                useCFStore.getState().setCustomSnippets(data.snippets);
                 browserAPI.storage.local.set({ customSnippets: data.snippets });
             }
         }
@@ -315,3 +315,4 @@ export const syncSettingsFromCloud = async () => {
         console.error("Failed to sync settings from cloud", e);
     }
 };
+
