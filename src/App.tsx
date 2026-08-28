@@ -53,7 +53,7 @@ const App = () => {
         };
         browserAPI.storage.onChanged.addListener(handleStorageChange);
 
-        browserAPI.storage.local.get(['isPlusUser', 'isLoggedIn', 'email', 'session', 'supabaseAvatar', 'customSnippets', 'editorSettings', 'shortcutSettings', 'themeCustomSettings', 'changeUI'], (res) => {
+        browserAPI.storage.local.get(['isPlusUser', 'isLoggedIn', 'email', 'session', 'supabaseAvatar', 'customSnippets', 'editorSettings', 'shortcutSettings', 'themeCustomSettings', 'changeUI', 'hasSyncedFromCloud'], (res) => {
             if (res.isPlusUser !== undefined) {
                 useCFStore.getState().setIsPlusUser(res.isPlusUser);
             }
@@ -83,6 +83,11 @@ const App = () => {
             }
             if (res.changeUI !== undefined) {
                 localStorage.setItem('changeUI', res.changeUI);
+            }
+
+            if (res.isLoggedIn && !res.hasSyncedFromCloud) {
+                // If we are logged in but haven't successfully synced yet, sync now.
+                syncSettingsFromCloud();
             }
 
             if (res.isLoggedIn && res.isPlusUser) {
@@ -167,6 +172,8 @@ const App = () => {
 };
 
 export default App;
+
+
 
 
 

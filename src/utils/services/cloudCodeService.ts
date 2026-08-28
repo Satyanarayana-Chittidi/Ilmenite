@@ -266,6 +266,12 @@ export const fetchSettingsFromCloud = async () => {
 
 export const syncAllSettingsToCloud = async () => {
     try {
+        const res = await browserAPI.storage.local.get('hasSyncedFromCloud');
+        if (!res.hasSyncedFromCloud) {
+            console.warn("Aborting syncAllSettingsToCloud because we haven't successfully fetched from cloud yet. This prevents overwriting cloud data with defaults.");
+            return;
+        }
+
         const editorSettings = JSON.parse(localStorage.getItem('editorSettings') || '{}');
         const shortcutSettings = JSON.parse(localStorage.getItem('shortcutSettings') || '{}');
         const themeCustomSettings = JSON.parse(localStorage.getItem('themeCustomSettings') || '{}');
@@ -311,8 +317,12 @@ export const syncSettingsFromCloud = async () => {
                 browserAPI.storage.local.set({ customSnippets: data.snippets });
             }
         }
+        // Mark that we have successfully synced at least once in this browser
+        browserAPI.storage.local.set({ hasSyncedFromCloud: true });
     } catch (e) {
         console.error("Failed to sync settings from cloud", e);
     }
 };
+
+
 
