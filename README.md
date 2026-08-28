@@ -1,14 +1,13 @@
-<div align="center">
+﻿<div align="center">
   <img src="public/assets/icons/ilmenite_icon.png" alt="Ilmenite Logo" width="128" height="128">
   <h1>Ilmenite</h1>
-  <p><strong>Advanced Competitive Programming Environment for Codeforces</strong></p>
+  <p><strong>The Ultimate Competitive Programming Environment for Codeforces</strong></p>
 </div>
 
 <div align="center">
-  <!-- Insert GitHub badges here, e.g., CI/CD status, version, license -->
-  <a href="https://github.com/Satyanarayana-Chittidi/Ilmenite/releases"><img src="https://img.shields.io/github/v/release/Satyanarayana-Chittidi/Ilmenite?style=flat-square" alt="Release Version"></a>
-  <a href="https://github.com/Satyanarayana-Chittidi/Ilmenite/blob/main/LICENSE"><img src="https://img.shields.io/github/license/Satyanarayana-Chittidi/Ilmenite?style=flat-square" alt="License"></a>
-  <img src="https://img.shields.io/badge/Platform-Chrome%20%7C%20Edge%20%7C%20Firefox-blue?style=flat-square" alt="Supported Platforms">
+  <a href="https://chromewebstore.google.com/detail/ilmenite/oanffehmigchhkjfeccpdkmmonpbbapc">
+    <img src="https://img.shields.io/badge/Available_on-Chrome_Web_Store-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Available on Chrome Web Store">
+  </a>
 </div>
 
 <br />
@@ -17,127 +16,63 @@
 
 ## Overview
 
-Ilmenite is a high-performance browser extension engineered to modernize the Codeforces platform. Designed specifically for competitive programmers, it seamlessly injects a suite of advanced development tools, customizable environments, and a robust IDE-like experience directly into the browser. 
+Ilmenite is a high-performance browser extension engineered to completely modernize the Codeforces platform. Designed specifically for competitive programmers, it seamlessly injects a suite of advanced development tools, customizable environments, and a robust IDE-like experience directly into the browser. 
 
-By eliminating the friction between reading problem statements and writing code, Ilmenite drastically reduces submission times and enhances overall competitive efficiency.
+By eliminating the friction between reading problem statements and writing code, Ilmenite drastically reduces submission times and enhances overall competitive efficiency. Say goodbye to toggling back and forth between your local editor and the browser!
 
 ---
 
-## Core Capabilities
+## ⚡ Power Features
 
-### In-Browser IDE Integration
-* **Monaco Engine:** Powered by the same core engine that runs Visual Studio Code, providing syntax highlighting, intelligent auto-suggestions, and deep language support.
-* **Vim Keybindings:** Native Vim motion integration for developers who rely on keyboard-driven workflows.
-* **Custom Snippet Management:** Define, store, and instantly inject complex boilerplate code or algorithmic templates.
+### 1. In-Browser VS Code Engine
+Write your solutions using the **Monaco Editor**—the exact same engine that powers Visual Studio Code, seamlessly embedded next to the problem statement.
+* **Intelligent Auto-Suggestions:** Get real-time autocompletion for variables, keywords, and standard library functions.
+* **Syntax Highlighting:** Crystal clear formatting for C++, Python, Java, and all major competitive programming languages.
+* **Vim Mode:** Native Vim motion integration for hardcore keyboard-driven developers who refuse to touch the mouse.
 
 > **[PLACEHOLDER: Insert a screenshot of the Monaco Editor active on a Codeforces problem page]**
 
-### Cloud Synchronization
-* **Persistent Settings:** All editor configurations, custom keyboard shortcuts, and UI preferences are synced in real-time.
-* **Supabase Backend:** Utilizes PostgreSQL and strict Row Level Security (RLS) to securely manage user profiles and JSONB data structures.
-* **Multi-Device Support:** Instantly retrieve your personalized workspace environment across any machine upon login.
+### 2. Custom Testcase Execution
+Stop relying on local terminals to verify your logic.
+* **Unlimited Testcases:** Add, edit, and manage an infinite number of custom test cases directly in the browser.
+* **Instant Execution:** Run your code against all test cases simultaneously and immediately see the diffs between your output and the expected output.
 
-### Advanced Theme Engine
-* **Fluid UI:** GPU-accelerated interfaces and smooth transitions powered by Framer Motion.
-* **Extensive Customization:** Granular control over UI colors, brightness, contrast, and dedicated eye-comfort modes tailored for extended coding sessions.
+> **[PLACEHOLDER: Insert a screenshot of the Custom Testcases panel running a solution]**
 
-### Competitive Tooling
-* **Dynamic Testcase Execution:** Add, modify, and execute unlimited custom test cases directly against your code before submission.
-* **Zero-Friction Navigation:** Highly configurable global shortcuts ensure rapid navigation through problem sets and contest leaderboards.
+### 3. Snippet Management & Boilerplates
+Never type the same #include <bits/stdc++.h> boilerplate again.
+* **Custom Snippets:** Define and store your complex algorithms (Segment Trees, DSU, Graph traversals) and instantly inject them into the editor with short trigger words.
+* **Default Templates:** Set a default template for your preferred language so your workspace is instantly ready the second you open a problem.
 
-> **[PLACEHOLDER: Insert a screenshot of the Custom Testcases panel or the Settings Dashboard]**
+### 4. Advanced Theme & UI Customization
+Codeforces is notoriously bright. Ilmenite brings it into the modern era.
+* **True Dark Mode:** A meticulously crafted dark mode that is easy on the eyes during late-night rounds.
+* **Advanced Theming:** Granular control over UI colors, brightness, and contrast. Choose from dozens of pre-installed editor themes (Monokai, Dracula, GitHub Dark, etc.).
+* **Fluid Animations:** GPU-accelerated interfaces and smooth panel transitions powered by Framer Motion.
 
----
+> **[PLACEHOLDER: Insert a screenshot of the Settings Dashboard and Theme Customizer]**
 
-## Technical Architecture
+### 5. Multi-Device Cloud Synchronization
+* **Persistent Settings:** Your snippets, editor configurations, keyboard shortcuts, and UI preferences are synced in real-time to the cloud.
+* **Login Anywhere:** Move to a different computer, log into Ilmenite, and instantly retrieve your highly personalized workspace environment.
 
-Ilmenite is built utilizing a modern, scalable web stack to ensure maximum performance within the constrained environment of a browser extension.
-
-* **Frontend Framework:** React 18
-* **Language:** TypeScript
-* **Styling:** Tailwind CSS, PostCSS
-* **State Management:** Zustand
-* **Animations:** Framer Motion
-* **Core Integrations:** Monaco Editor API
-* **Backend Services:** Supabase (PostgreSQL, Auth)
-* **Build System:** Webpack 5, Babel
+### 6. Zero-Friction Navigation
+Navigate Codeforces at the speed of thought.
+* **Global Shortcuts:** Highly configurable keyboard shortcuts allow you to jump to the standings, submit code, or open the editor without ever reaching for your trackpad.
 
 ---
 
-## Installation
+## 🚀 Installation
 
-### Chrome Web Store
-The official, compiled release is available on the Chrome Web Store.
-1. Visit the [Ilmenite Web Store Page](#) *(Link coming soon)*.
+Ilmenite is officially available for download on the Chrome Web Store!
+
+1. Visit the **[Ilmenite Chrome Web Store Page](https://chromewebstore.google.com/detail/ilmenite/oanffehmigchhkjfeccpdkmmonpbbapc)**.
 2. Click **Add to Chrome**.
-3. Pin the extension to your toolbar and navigate to Codeforces to begin.
-
-### Manual Installation (Developer Mode)
-If you wish to test beta features or run the extension locally:
-1. Download the latest ilmenite-chrome-vX.X.X.zip from the [Releases](https://github.com/Satyanarayana-Chittidi/Ilmenite/releases) page.
-2. Extract the archive to a local folder.
-3. Open your browser and navigate to the Extensions page (chrome://extensions/).
-4. Enable **Developer Mode**.
-5. Click **Load unpacked** and select the extracted dist directory.
+3. Pin the extension to your toolbar.
+4. Navigate to any Codeforces problem page, and your new coding environment will instantly initialize!
 
 ---
 
-## Developer Setup
+## 📜 License
 
-Contributions to Ilmenite are highly encouraged. Follow the instructions below to set up the local development environment.
-
-### Prerequisites
-* Node.js (v18 or higher recommended)
-* npm or yarn
-
-### Initializing the Project
-`ash
-# Clone the repository
-git clone https://github.com/Satyanarayana-Chittidi/Ilmenite.git
-
-# Navigate to the project directory
-cd Ilmenite
-
-# Install dependencies
-npm install
-`
-
-### Environment Configuration
-To utilize cloud synchronization locally, you must configure the backend infrastructure:
-1. Create a Supabase project.
-2. Initialize the profiles table with settings (JSONB) and snippets (JSONB) columns.
-3. Apply standard PostgreSQL Row Level Security (RLS) policies.
-4. Replace the placeholder credentials inside src/utils/supabaseClient.ts with your specific API keys.
-
-### Building and Packaging
-Run the Webpack development server for local UI testing:
-`ash
-npm run start
-`
-
-Generate a production-ready build for the browser extension:
-`ash
-# Compiles minified assets to the /dist folder
-npm run build
-
-# Compiles and packages a .zip archive into /extension-releases
-npm run package
-`
-
----
-
-## Contributing
-
-We welcome pull requests for bug fixes, feature implementations, and documentation improvements. Please ensure that your code adheres to the existing architectural patterns and passes all ESLint checks before submission.
-
-1. Fork the repository.
-2. Create your feature branch (git checkout -b feature/NewFeature).
-3. Commit your changes (git commit -m 'Add a sophisticated new feature').
-4. Push to the branch (git push origin feature/NewFeature).
-5. Open a Pull Request.
-
----
-
-## License
-
-This project is distributed under the MIT License. See the LICENSE file for more details.
+This project is entirely open-source and distributed under the **MIT License**. You are free to view the source code, modify it, and contribute. See the LICENSE file for more details.
