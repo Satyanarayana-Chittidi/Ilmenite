@@ -1,4 +1,4 @@
-import { create } from "zustand";
+﻿import { create } from "zustand";
 import { EditorSettingsTypes, TestCaseArray, ShortcutSettings, CustomSnippetsByLanguage } from "../types/types";
 import themesJSON from '../../themes/themelist.json';
 import { DEFAULT_EDITOR_SETTINGS, DEFAULT_SHORTCUT_SETTINGS } from "../data/constants";
@@ -69,8 +69,8 @@ export const useCFStore = create<CFStoreInterface>((set) => ({
     isSubmitting: false,
     apiKey: localStorage.getItem('judge0CEApiKey') || '',
     editorThemeList: themesJSON,
-    editorSettings: JSON.parse(localStorage.getItem('editorSettings') ?? 'null') ?? DEFAULT_EDITOR_SETTINGS,
-    shortcutSettings: JSON.parse(localStorage.getItem('shortcutSettings') ?? 'null') ?? DEFAULT_SHORTCUT_SETTINGS,
+    editorSettings: { ...DEFAULT_EDITOR_SETTINGS, ...(JSON.parse(localStorage.getItem('editorSettings') ?? 'null') || {}) },
+    shortcutSettings: { ...DEFAULT_SHORTCUT_SETTINGS, ...(JSON.parse(localStorage.getItem('shortcutSettings') ?? 'null') || {}) },
     customSnippets: JSON.parse(localStorage.getItem('customSnippets') ?? 'null') ?? {},
     isPlusUser: localStorage.getItem('isPlusUser') === 'true', // load from local storage
     isLoggedIn: localStorage.getItem('isLoggedIn') === 'true', // Default to false unless explicitly true
@@ -101,3 +101,4 @@ export const useCFStore = create<CFStoreInterface>((set) => ({
     setLiveContestTime: (time) => set({ liveContestTime: time }),
     setIsLiveContest: (isLive) => set({ isLiveContest: isLive })
 }));
+

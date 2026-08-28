@@ -10,7 +10,7 @@ export const useEditorSettings = (editorSettings: EditorSettingsTypes, setEditor
         const storedSettings = localStorage.getItem('editorSettings');
         if (storedSettings) {
             try {
-                return JSON.parse(storedSettings);
+                return { ...DEFAULT_EDITOR_SETTINGS, ...JSON.parse(storedSettings) };
             } catch {
                 console.error('Failed to parse editor settings');
             }
@@ -84,3 +84,4 @@ export const useEditorSettings = (editorSettings: EditorSettingsTypes, setEditor
         saveEditorSettings,
     }
 }
+
