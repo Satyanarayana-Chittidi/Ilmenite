@@ -1,4 +1,5 @@
-﻿import { supabaseClient as supabase } from '../supabaseClient';
+﻿import { browserAPI } from '../browser/browserDetect';
+import { supabaseClient as supabase } from '../supabaseClient';
 import LZString from 'lz-string';
 import { useCFStore } from '../../zustand/useCFStore';
 import { toast } from 'sonner';
@@ -264,14 +265,8 @@ export const fetchSettingsFromCloud = async () => {
     }
 };
 
-export const syncAllSettingsToCloud = async () => {
+export const syncSettingsGroupToCloud = async () => {
     try {
-        const res = await browserAPI.storage.local.get('hasSyncedFromCloud');
-        if (!res.hasSyncedFromCloud) {
-            console.warn("Aborting syncAllSettingsToCloud because we haven't successfully fetched from cloud yet. This prevents overwriting cloud data with defaults.");
-            return;
-        }
-
         const editorSettings = JSON.parse(localStorage.getItem('editorSettings') || '{}');
         const shortcutSettings = JSON.parse(localStorage.getItem('shortcutSettings') || '{}');
         const themeCustomSettings = JSON.parse(localStorage.getItem('themeCustomSettings') || '{}');
@@ -284,12 +279,33 @@ export const syncAllSettingsToCloud = async () => {
             changeUI
         };
         
+        const session = await getAuthenticatedSession();
+        if (!session) return false;
+        
+        const { error } = await supabase.from('profiles').update({ settings }).eq('id', session.user.id);
+        if (error) throw error;
+    } catch (e) {
+        console.error("Failed to sync settings to cloud", e);
+    }
+};
+
+export const syncSnippetsToCloud = async () => {
+    try {
         const snippets = JSON.parse(localStorage.getItem('customSnippets') || '{}');
         
-        await saveSettingsToCloud(settings, snippets);
+        const session = await getAuthenticatedSession();
+        if (!session) return false;
+        
+        const { error } = await supabase.from('profiles').update({ snippets }).eq('id', session.user.id);
+        if (error) throw error;
     } catch (e) {
-        console.error("Failed to sync all settings to cloud", e);
+        console.error("Failed to sync snippets to cloud", e);
     }
+};
+
+export const syncAllSettingsToCloud = async () => {
+    await syncSettingsGroupToCloud();
+    await syncSnippetsToCloud();
 };
 
 export const syncSettingsFromCloud = async () => {
@@ -323,6 +339,9 @@ export const syncSettingsFromCloud = async () => {
         console.error("Failed to sync settings from cloud", e);
     }
 };
+
+
+
 
 
 
