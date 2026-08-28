@@ -189,3 +189,5 @@ export const normalizeShortcut = (shortcut: string): string => {
     })
     .join(' + ');
 };
+
+

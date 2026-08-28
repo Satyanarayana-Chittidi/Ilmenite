@@ -1,6 +1,7 @@
 ﻿import { handleSaveTemplate } from "../../utils/localStorageHelper";
 import React, { useEffect, useRef, useState } from "react";
 import { SettingsProps } from "../../types/types";
+import Footer from "../global/Footer";
 import DeleteCodesConfirmationPopup from "../global/popups/DeleteCodesConfirmationPopup";
 import SettingsTopBar from "./ui/SettingsTopBar";
 import { AuthForm } from '../auth/AuthForm';
@@ -15,6 +16,7 @@ import { Save } from "lucide-react";
 // import ApiSettings from "../global/ApiSettings";
 
 const Settings: React.FC<SettingsProps> = ({ setShowOptions, theme, setTheme }) => {
+    console.log("Settings component rendered!");
     const monacoInstanceRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
     const [changeUI, setChangeUI] = useState(localStorage.getItem('changeUI') || 'true');
     const [openConfirmationPopup, setOpenConfirmationPopup] = useState<boolean>(false);
@@ -100,6 +102,7 @@ const Settings: React.FC<SettingsProps> = ({ setShowOptions, theme, setTheme }) 
                             />
                         </div>
                     </div>
+                    <Footer />
                 </div>
             </div>
         </>
@@ -107,4 +110,6 @@ const Settings: React.FC<SettingsProps> = ({ setShowOptions, theme, setTheme }) 
 };
 
 export default React.memo(Settings);
+
+
 

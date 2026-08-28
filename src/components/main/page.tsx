@@ -246,3 +246,5 @@ const Main: React.FC<MainProps> = ({ showOptionsRef, setShowOptions, theme }) =>
 };
 export default React.memo(Main);
 
+
+

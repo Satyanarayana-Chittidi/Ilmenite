@@ -1,4 +1,4 @@
-import { syncAllSettingsToCloud } from '../services/cloudCodeService';
+﻿import { syncSettingsGroupToCloud } from '../services/cloudCodeService';
 import { useEffect } from 'react';
 import { ShortcutSettings } from '../../types/types';
 import { DEFAULT_SHORTCUT_SETTINGS } from '../../data/constants';
@@ -14,7 +14,7 @@ export const useShortcutSettings = (settings: ShortcutSettings, setSettings: (se
 
     const saveShortcutSettings = () => {
         localStorage.setItem('shortcutSettings', JSON.stringify(settings));
-        syncAllSettingsToCloud();
+        syncSettingsGroupToCloud();
     };
 
     useEffect(() => {
@@ -23,3 +23,4 @@ export const useShortcutSettings = (settings: ShortcutSettings, setSettings: (se
 
     return { getShortcutSettings, saveShortcutSettings };
 };
+

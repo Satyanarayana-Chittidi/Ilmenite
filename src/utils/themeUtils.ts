@@ -1,4 +1,4 @@
-import { syncAllSettingsToCloud } from './services/cloudCodeService';
+﻿import { syncSettingsGroupToCloud } from './services/cloudCodeService';
 import { browserAPI } from "./browser/browserDetect";
 
 export interface ThemeSettings {
@@ -23,13 +23,13 @@ export const getThemeSettings = (): ThemeSettings => {
 export const saveThemeSettings = (settings: ThemeSettings): void => {
     localStorage.setItem('themeCustomSettings', JSON.stringify(settings));
     browserAPI.storage.local.set({ themeCustomSettings: settings });
-    syncAllSettingsToCloud();
+    syncSettingsGroupToCloud();
 };
 
 export const resetThemeSettings = (): ThemeSettings => {
     localStorage.setItem('themeCustomSettings', JSON.stringify(defaultThemeSettings));
     browserAPI.storage.local.set({ themeCustomSettings: defaultThemeSettings });
-    syncAllSettingsToCloud();
+    syncSettingsGroupToCloud();
     return defaultThemeSettings;
 };
 
@@ -47,3 +47,4 @@ export const applyThemeSettings = (settings: ThemeSettings): void => {
         }
     });
 };
+

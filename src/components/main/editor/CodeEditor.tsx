@@ -1,20 +1,5 @@
 ﻿import React, { useEffect, useRef } from 'react';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
-import 'monaco-editor/esm/vs/basic-languages/cpp/cpp.contribution';
-import 'monaco-editor/esm/vs/basic-languages/java/java.contribution';
-import 'monaco-editor/esm/vs/basic-languages/python/python.contribution';
-import 'monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution';
-import 'monaco-editor/esm/vs/basic-languages/kotlin/kotlin.contribution';
-import 'monaco-editor/esm/vs/basic-languages/go/go.contribution';
-import 'monaco-editor/esm/vs/basic-languages/rust/rust.contribution';
-import 'monaco-editor/esm/vs/basic-languages/ruby/ruby.contribution';
-import 'monaco-editor/esm/vs/language/typescript/monaco.contribution';
-import 'monaco-editor/esm/vs/language/css/monaco.contribution';
-import 'monaco-editor/esm/vs/language/json/monaco.contribution';
-import 'monaco-editor/esm/vs/editor/contrib/find/browser/findController.js';
-import 'monaco-editor/esm/vs/editor/contrib/suggest/browser/suggestController.js';
-import 'monaco-editor/esm/vs/editor/contrib/snippet/browser/snippetController2.js';
-import 'monaco-editor/esm/vs/editor/contrib/wordHighlighter/browser/wordHighlighter.js';
+import * as monaco from 'monaco-editor';
 import { CodeEditorProps, EditorSettingsTypes, IVimEditor } from '../../../types/types';
 import themesJSON from '../../../../themes/themelist.json';
 import { useEditorSettings } from '../../../utils/hooks/useEditorSettings';
@@ -200,4 +185,7 @@ const CodeEditor = React.memo(({ monacoInstanceRef, language, fontSize, template
 });
 
 export default CodeEditor;
+
+
+
 
