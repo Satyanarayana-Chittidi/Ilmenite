@@ -44,7 +44,7 @@ const SnippetItem = ({
         if (e.currentTarget.contains(e.relatedTarget as Node)) return;
         
         setIsFocused(false);
-        onSave();
+        // We removed onSave() from here so it only saves when clicking the save button or delete button
     };
 
     return (
@@ -255,4 +255,5 @@ const SnippetSettings: React.FC<SnippetSettingsProps> = ({ isOpen, onClose }) =>
 };
 
 export default SnippetSettings;
+
 
