@@ -52,9 +52,10 @@ Codeforces is notoriously bright. Ilmenite brings it into the modern era.
 
 > **[PLACEHOLDER: Insert a screenshot of the Settings Dashboard and Theme Customizer]**
 
-### 5. Multi-Device Cloud Synchronization
-* **Persistent Settings:** Your snippets, editor configurations, keyboard shortcuts, and UI preferences are synced in real-time to the cloud.
-* **Login Anywhere:** Move to a different computer, log into Ilmenite, and instantly retrieve your highly personalized workspace environment.
+### 5. Secure Authentication & Cloud Synchronization
+* **Seamless Login:** Securely authenticate directly within the extension to unlock persistent storage and premium features.
+* **Cloud Backup:** Your snippets, editor configurations, keyboard shortcuts, and UI preferences are synced in real-time to the cloud database.
+* **Multi-Device Support:** Move to a different computer, log into Ilmenite, and instantly retrieve your highly personalized workspace environment exactly as you left it.
 
 ### 6. Zero-Friction Navigation
 Navigate Codeforces at the speed of thought.
@@ -75,4 +76,4 @@ Ilmenite is officially available for download on the Chrome Web Store!
 
 ## 📜 License
 
-This project is entirely open-source and distributed under the **MIT License**. You are free to view the source code, modify it, and contribute. See the LICENSE file for more details.
+This project is entirely open-source and distributed under the **MIT License**. You are free to view the source code, modify it, and contribute. See the [LICENSE](LICENSE) file for more details.
