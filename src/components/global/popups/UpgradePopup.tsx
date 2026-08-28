@@ -53,7 +53,7 @@ const UpgradePopup: React.FC<UpgradePopupProps> = ({ isOpen, onClose, featureNam
                             </div>
                             
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                                Unlock Ilmenite
+                                Unlock Ilmenite Plus
                             </h3>
                             
                             <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
