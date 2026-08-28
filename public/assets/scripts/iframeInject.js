@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
 	// Check if we are on a Codeforces problem page
 	const isProblemPage =
 		/^\/(?:problemset\/problem\/|contest\/\d+\/problem\/)/.test(
@@ -680,7 +680,7 @@
 
 					// 3. Topics Pill
 					const topicsPill = document.createElement('button');
-					applyPillStyles(topicsPill, '18px');
+					applyPillStyles(topicsPill);
 					topicsPill.style.gap = '6px';
 					topicsPill.style.backgroundColor = '#f0f0f0';
 					topicsPill.style.color = '#333333';
@@ -1017,3 +1017,4 @@
 
 	});
 })();
+
