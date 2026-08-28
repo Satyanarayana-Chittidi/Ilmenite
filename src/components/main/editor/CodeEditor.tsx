@@ -1,12 +1,5 @@
 ﻿import React, { useEffect, useRef } from 'react';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
-import 'monaco-editor/esm/vs/language/typescript/monaco.contribution';
-import 'monaco-editor/esm/vs/language/css/monaco.contribution';
-import 'monaco-editor/esm/vs/language/json/monaco.contribution';
-import 'monaco-editor/esm/vs/editor/contrib/find/browser/findController.js';
-import 'monaco-editor/esm/vs/editor/contrib/suggest/browser/suggestController.js';
-import 'monaco-editor/esm/vs/editor/contrib/snippet/browser/snippetController2.js';
-import 'monaco-editor/esm/vs/editor/contrib/wordHighlighter/browser/wordHighlighter.js';
+import * as monaco from 'monaco-editor';
 import { CodeEditorProps, EditorSettingsTypes, IVimEditor } from '../../../types/types';
 import themesJSON from '../../../../themes/themelist.json';
 import { useEditorSettings } from '../../../utils/hooks/useEditorSettings';
@@ -61,7 +54,7 @@ const CodeEditor = React.memo(({ monacoInstanceRef, language, fontSize, template
                 const editorSettings:EditorSettingsTypes = getEditorSettings();
                 monacoInstanceRef.current = monaco.editor.create(editorRef.current, {
                     language: language,
-                    theme: resolveTheme(theme, !isPlusUser ? 'auto' : editorSettings.theme),
+                    theme: resolveTheme(theme, editorSettings.theme),
                     fontSize: fontSize,
                     tabSize: editorSettings.indentSize,
                     automaticLayout: true,
@@ -86,10 +79,10 @@ const CodeEditor = React.memo(({ monacoInstanceRef, language, fontSize, template
                     overviewRulerLanes: 0,
                     lineNumbersMinChars: 4,
                     lineNumbers: editorSettings.lineNumbers,
-                    suggestOnTriggerCharacters: !isPlusUser ? false : editorSettings.autoSuggestions,
-                    quickSuggestions: !isPlusUser ? false : editorSettings.autoSuggestions,
-                    wordBasedSuggestions: !isPlusUser ? 'off' : (editorSettings.autoSuggestions ? 'currentDocument' : 'off'),
-                    cursorSmoothCaretAnimation: !isPlusUser ? 'off' : editorSettings.cursorSmoothCaretAnimation,
+                    suggestOnTriggerCharacters: editorSettings.autoSuggestions,
+                    quickSuggestions: editorSettings.autoSuggestions,
+                    wordBasedSuggestions: editorSettings.autoSuggestions ? 'currentDocument' : 'off',
+                    cursorSmoothCaretAnimation: editorSettings.cursorSmoothCaretAnimation,
                     cursorStyle: editorSettings.cursorStyle || 'line',
                     tabCompletion: 'on',
                     acceptSuggestionOnEnter: 'on',
@@ -103,7 +96,7 @@ const CodeEditor = React.memo(({ monacoInstanceRef, language, fontSize, template
             const vimEditor = monacoInstanceRef.current! as IVimEditor
             vimEditor.vimStatusRef = vimStatusRef;
 
-            const currentKeyBinding = !isPlusUser ? 'standard' : editorSettings.keyBinding;
+            const currentKeyBinding = editorSettings.keyBinding;
             if(currentKeyBinding == "vim") {
                 vimEditor.vimMode = initVimMode(monacoInstanceRef.current, vimStatusRef.current);
             }
@@ -121,17 +114,17 @@ const CodeEditor = React.memo(({ monacoInstanceRef, language, fontSize, template
 
     useEffect(() => {
         if (monacoInstanceRef.current && monaco) {
-            monaco.editor.setTheme(resolveTheme(theme, !isPlusUser ? 'auto' : editorSettings.theme));
+            monaco.editor.setTheme(resolveTheme(theme, editorSettings.theme));
             
             monacoInstanceRef.current.updateOptions({
-                suggestOnTriggerCharacters: !isPlusUser ? false : editorSettings.autoSuggestions,
-                quickSuggestions: !isPlusUser ? false : editorSettings.autoSuggestions,
-                wordBasedSuggestions: !isPlusUser ? 'off' : (editorSettings.autoSuggestions ? 'currentDocument' : 'off'),
-                cursorSmoothCaretAnimation: !isPlusUser ? 'off' : editorSettings.cursorSmoothCaretAnimation,
+                suggestOnTriggerCharacters: editorSettings.autoSuggestions,
+                quickSuggestions: editorSettings.autoSuggestions,
+                wordBasedSuggestions: editorSettings.autoSuggestions ? 'currentDocument' : 'off',
+                cursorSmoothCaretAnimation: editorSettings.cursorSmoothCaretAnimation,
             });
 
             const vimEditor = monacoInstanceRef.current as any;
-            const currentKeyBinding = !isPlusUser ? 'standard' : editorSettings.keyBinding;
+            const currentKeyBinding = editorSettings.keyBinding;
             if(currentKeyBinding == "vim") {
                 if(!vimEditor.vimMode && vimEditor.vimStatusRef?.current) {
                     vimEditor.vimMode = initVimMode(monacoInstanceRef.current, vimEditor.vimStatusRef.current);
@@ -184,3 +177,5 @@ const CodeEditor = React.memo(({ monacoInstanceRef, language, fontSize, template
 });
 
 export default CodeEditor;
+
+
