@@ -1,4 +1,4 @@
-// Functions in respective folders
+﻿// Functions in respective folders
 // changeLoginPageUI, changeProblemSetPageUI, removeLoginPageUI, removeProblemSetPageUI-> changeUIFunctions
 // injectDarkModeCSS, sortToggleImgInvert, removeSortToggleImgInvert -> darkModeFunctions
 const isFirefox = false;
@@ -55,10 +55,12 @@ browserAPI.storage.onChanged.addListener((changes, areaName) => {
                 removeSortToggleImgInvert();
             }
         } else if (changes.themeCustomSettings) {
-            if (document.documentElement.classList.contains('dark') ||
-                document.querySelector('html[data-theme="dark"]')) {
-                applyCustomThemeSettings(changes.themeCustomSettings.newValue);
-            }
+            browserAPI.storage.local.get("theme").then((res) => {
+                const currentTheme = res.theme || "dark";
+                if (currentTheme === "dark") {
+                    applyCustomThemeSettings(changes.themeCustomSettings.newValue);
+                }
+            });
         } else if (changes.changeUI || changes.isPlusUser) {
             browserAPI.storage.local.get(["changeUI", "isPlusUser"]).then((res) => {
                 if (res.changeUI === "true" && res.isPlusUser) {
@@ -169,3 +171,4 @@ function injectGlobalThemeToggle() {
 }
 
 injectGlobalThemeToggle();
+

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Scissors, Plus, Trash2, Save } from 'lucide-react';
 import { useCFStore } from '../../../zustand/useCFStore';
@@ -158,7 +158,6 @@ const SnippetSettings: React.FC<SnippetSettingsProps> = ({ isOpen, onClose }) =>
     };
 
     const handleClose = () => {
-        saveChangesToStore(localSnippets);
         onClose();
     };
 
@@ -256,3 +255,4 @@ const SnippetSettings: React.FC<SnippetSettingsProps> = ({ isOpen, onClose }) =>
 };
 
 export default SnippetSettings;
+

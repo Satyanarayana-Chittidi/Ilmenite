@@ -53,7 +53,7 @@ const App = () => {
         };
         browserAPI.storage.onChanged.addListener(handleStorageChange);
 
-        browserAPI.storage.local.get(['isPlusUser', 'isLoggedIn', 'email', 'session', 'supabaseAvatar'], (res) => {
+        browserAPI.storage.local.get(['isPlusUser', 'isLoggedIn', 'email', 'session', 'supabaseAvatar', 'customSnippets', 'editorSettings', 'shortcutSettings', 'themeCustomSettings', 'changeUI'], (res) => {
             if (res.isPlusUser !== undefined) {
                 useCFStore.getState().setIsPlusUser(res.isPlusUser);
             }
@@ -66,8 +66,23 @@ const App = () => {
             if (res.session !== undefined) {
                 useCFStore.getState().setSession(res.session);
             }
-            if (res.supabaseAvatar !== undefined) {
+                        if (res.supabaseAvatar !== undefined) {
                 useCFStore.getState().setSupabaseAvatar(res.supabaseAvatar);
+            }
+            if (res.customSnippets !== undefined) {
+                useCFStore.getState().setCustomSnippets(res.customSnippets);
+            }
+            if (res.editorSettings !== undefined) {
+                useCFStore.getState().setEditorSettings(res.editorSettings);
+            }
+            if (res.shortcutSettings !== undefined) {
+                useCFStore.getState().setShortcutSettings(res.shortcutSettings);
+            }
+            if (res.themeCustomSettings !== undefined) {
+                localStorage.setItem('themeCustomSettings', JSON.stringify(res.themeCustomSettings));
+            }
+            if (res.changeUI !== undefined) {
+                localStorage.setItem('changeUI', res.changeUI);
             }
 
             if (res.isLoggedIn && res.isPlusUser) {
@@ -152,5 +167,7 @@ const App = () => {
 };
 
 export default App;
+
+
 
 
