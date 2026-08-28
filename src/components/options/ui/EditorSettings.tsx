@@ -32,8 +32,13 @@ const EditorSettings: React.FC<EditorSettingsProps> = ({ isOpen, onClose, theme 
         }
     }, [isOpen]);
 
+    const isInitialMount = useRef(true);
     useEffect(() => {
-        saveEditorSettings();
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+        } else {
+            saveEditorSettings();
+        }
     }, [editorSettings]);
 
     return (
@@ -352,4 +357,5 @@ const EditorSettings: React.FC<EditorSettingsProps> = ({ isOpen, onClose, theme 
 };
 
 export default EditorSettings;
+
 

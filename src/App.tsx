@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+﻿import { useState, useEffect, useRef, useCallback } from 'react';
 import './App.css';
 import Options from './components/options/page';
 import Main from './components/main/page';
@@ -37,15 +37,15 @@ const App = () => {
             }
             if (areaName === "local" && changes.isLoggedIn !== undefined) {
                 useCFStore.getState().setIsLoggedIn(changes.isLoggedIn.newValue);
-                if (changes.isLoggedIn.newValue) {
-                    syncSettingsFromCloud();
-                }
             }
             if (areaName === "local" && changes.email !== undefined) {
                 useCFStore.getState().setEmail(changes.email.newValue);
             }
-            if (areaName === "local" && changes.session !== undefined) {
+                        if (areaName === "local" && changes.session !== undefined) {
                 useCFStore.getState().setSession(changes.session.newValue);
+                if (changes.isLoggedIn?.newValue || useCFStore.getState().isLoggedIn) {
+                    syncSettingsFromCloud();
+                }
             }
             if (areaName === "local" && changes.supabaseAvatar !== undefined) {
                 useCFStore.getState().setSupabaseAvatar(changes.supabaseAvatar.newValue);
@@ -152,3 +152,5 @@ const App = () => {
 };
 
 export default App;
+
+
