@@ -15,6 +15,7 @@ import { initVimMode } from 'monaco-vim';
 import { saveCodeForSlug } from '../../../utils/services/storageService';
 import { registerCustomSnippets } from '../../../utils/snippets/registerSnippets';
 import { useCustomSnippets } from '../../../utils/hooks/useCustomSnippets';
+import { loadCodeWithCursor } from '../../../utils/codeHandlers';
 
 const editorStyle: React.CSSProperties = {
     flexGrow: 1,
@@ -92,7 +93,7 @@ const CodeEditor = React.memo(({ monacoInstanceRef, language, fontSize, template
                 });
 
                 if (templateCode) {
-                    monacoInstanceRef.current.setValue(templateCode);
+                    loadCodeWithCursor(monacoInstanceRef.current, templateCode, isMainEditor);
                 }
             }
 

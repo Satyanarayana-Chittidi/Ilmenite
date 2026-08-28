@@ -106,7 +106,7 @@ const Main: React.FC<MainProps> = ({ showOptionsRef, setShowOptions, theme }) =>
                     }
 
                     setTimeout(() => {
-                        loadCodeWithCursor(monacoInstanceRef.current, codeForUrl);
+                        loadCodeWithCursor(monacoInstanceRef.current, codeForUrl, true);
                     }, 500);
                     loadTestCases({ slug: newSlug });
                 }

@@ -16,7 +16,7 @@ export const useCodeManagement = (monacoInstanceRef: React.MutableRefObject<mona
         }
         const compressedTemplate = localStorage.getItem('template') || '';
         const temmplateCode = LZString.decompressFromUTF16(compressedTemplate) || '';
-        loadCodeWithCursor(monacoInstanceRef.current, temmplateCode);
+        loadCodeWithCursor(monacoInstanceRef.current, temmplateCode, true);
     };
 
     const handleLanguageChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
