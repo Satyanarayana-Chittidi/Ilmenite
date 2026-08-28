@@ -182,7 +182,7 @@ const AccountBar: React.FC<AccountBarProps> = ({ setShowUpgradePopup, setUpgrade
                     showDropdown ? (
                         <div className="flex justify-between items-center w-full">
                             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {isPlusUser ? 'You are using Ilmenite Plus' : 'You are using free tier of Ilmenite'}
+                                {isPlusUser ? 'You are using Ilmenite' : 'You are using free tier of Ilmenite'}
                             </span>
                             <button
                                 onClick={() => {
@@ -256,7 +256,7 @@ const AccountBar: React.FC<AccountBarProps> = ({ setShowUpgradePopup, setUpgrade
                     <div className="bg-white dark:bg-[#1e1e1e] p-6 rounded-lg shadow-xl max-w-sm w-full mx-4 border border-gray-200 dark:border-gray-800">
                         <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Log Out?</h3>
                         <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm">
-                            Are you sure you want to log out of Ilmenite Plus?
+                            Are you sure you want to log out of Ilmenite?
                         </p>
                         <div className="flex justify-end gap-3">
                             <button 

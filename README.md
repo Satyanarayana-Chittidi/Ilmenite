@@ -1,6 +1,6 @@
-﻿<div align="center">
+<div align="center">
   <img src="public/assets/icons/ilmenite_icon.png" alt="Ilmenite Logo" width="128" height="128">
-  <h1>Ilmenite Plus</h1>
+  <h1>Ilmenite</h1>
   <p><strong>Advanced Competitive Programming Environment for Codeforces</strong></p>
 </div>
 
@@ -17,9 +17,9 @@
 
 ## Overview
 
-Ilmenite Plus is a high-performance browser extension engineered to modernize the Codeforces platform. Designed specifically for competitive programmers, it seamlessly injects a suite of advanced development tools, customizable environments, and a robust IDE-like experience directly into the browser. 
+Ilmenite is a high-performance browser extension engineered to modernize the Codeforces platform. Designed specifically for competitive programmers, it seamlessly injects a suite of advanced development tools, customizable environments, and a robust IDE-like experience directly into the browser. 
 
-By eliminating the friction between reading problem statements and writing code, Ilmenite Plus drastically reduces submission times and enhances overall competitive efficiency.
+By eliminating the friction between reading problem statements and writing code, Ilmenite drastically reduces submission times and enhances overall competitive efficiency.
 
 ---
 
@@ -51,7 +51,7 @@ By eliminating the friction between reading problem statements and writing code,
 
 ## Technical Architecture
 
-Ilmenite Plus is built utilizing a modern, scalable web stack to ensure maximum performance within the constrained environment of a browser extension.
+Ilmenite is built utilizing a modern, scalable web stack to ensure maximum performance within the constrained environment of a browser extension.
 
 * **Frontend Framework:** React 18
 * **Language:** TypeScript
@@ -68,7 +68,7 @@ Ilmenite Plus is built utilizing a modern, scalable web stack to ensure maximum 
 
 ### Chrome Web Store
 The official, compiled release is available on the Chrome Web Store.
-1. Visit the [Ilmenite Plus Web Store Page](#) *(Link coming soon)*.
+1. Visit the [Ilmenite Web Store Page](#) *(Link coming soon)*.
 2. Click **Add to Chrome**.
 3. Pin the extension to your toolbar and navigate to Codeforces to begin.
 
@@ -84,7 +84,7 @@ If you wish to test beta features or run the extension locally:
 
 ## Developer Setup
 
-Contributions to Ilmenite Plus are highly encouraged. Follow the instructions below to set up the local development environment.
+Contributions to Ilmenite are highly encouraged. Follow the instructions below to set up the local development environment.
 
 ### Prerequisites
 * Node.js (v18 or higher recommended)
