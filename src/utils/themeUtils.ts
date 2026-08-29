@@ -1,4 +1,4 @@
-﻿import { syncSettingsGroupToCloud } from './services/cloudCodeService';
+import { syncSettingsGroupToCloud } from './services/cloudCodeService';
 import { browserAPI } from "./browser/browserDetect";
 
 export interface ThemeSettings {

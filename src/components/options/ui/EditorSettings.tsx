@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Code, Settings, Palette, Eye } from 'lucide-react';
 import PremiumSelect from '../../global/PremiumSelect';
@@ -9,6 +9,7 @@ import CodeEditor from '../../main/editor/CodeEditor';
 import * as monaco from 'monaco-editor';
 import { PREVIEW_CODE } from '../../../data/constants';
 import { formatCode } from '../../../utils/helper';
+import { syncAllSettingsToCloud } from '../../../utils/services/cloudCodeService';
 
 interface EditorSettingsProps {
     isOpen: boolean;
@@ -70,7 +71,10 @@ const EditorSettings: React.FC<EditorSettingsProps> = ({ isOpen, onClose, theme 
                                 Editor Settings
                             </h2>
                             <motion.button
-                                onClick={onClose}
+                                onClick={() => {
+                                    syncAllSettingsToCloud();
+                                    onClose();
+                                }}
                                 className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-[#333333] transition-colors group"
                                 title="Close"
                                 aria-label="Close"
@@ -340,7 +344,10 @@ const EditorSettings: React.FC<EditorSettingsProps> = ({ isOpen, onClose, theme 
                         {/* Footer */}
                         <div className="sticky bottom-0 bg-gray-50 dark:bg-[#222222] px-6 py-4 border-t border-gray-200 dark:border-gray-800 flex justify-end gap-3">
                             <motion.button
-                                onClick={() => onClose()}
+                                onClick={() => {
+                                    syncAllSettingsToCloud();
+                                    onClose();
+                                }}
                                 className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 transition-colors"
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}

@@ -5,7 +5,7 @@ const changeLoginPageUI = () => {
     
     const metaDescription = document.createElement('meta');
     metaDescription.setAttribute('name', 'description');
-    metaDescription.setAttribute('content', 'Login to Codeforces with enhanced UI and features through Ilmenite');
+    metaDescription.setAttribute('content', 'Login to Codeforces with enhanced UI and features through Ilmenite Plus');
     document.head.appendChild(metaDescription);
     
     const currentURL = window.location.href;

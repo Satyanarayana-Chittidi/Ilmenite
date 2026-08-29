@@ -1,4 +1,4 @@
-﻿import {toast} from "sonner";
+import {toast} from "sonner";
 import * as monaco from 'monaco-editor';
 import { saveCloudTemplate } from './services/cloudCodeService';
 import { useCFStore } from '../zustand/useCFStore';
@@ -23,11 +23,17 @@ export const handleSaveTemplate = async (editor: monaco.editor.IStandaloneCodeEd
     const compressedTemplate = LZString.compressToUTF16(editorValue);
     localStorage.setItem("template", compressedTemplate);
     
-
     const isPlusUser = useCFStore.getState().isPlusUser;
     const isLoggedIn = useCFStore.getState().isLoggedIn;
     if (isPlusUser && isLoggedIn) {
-        await saveCloudTemplate(compressedTemplate);
+        const success = await saveCloudTemplate(compressedTemplate);
+        if (success) {
+            toast.success("Template saved & synced to cloud!");
+        } else {
+            toast.warning("Template saved locally, but cloud sync failed.");
+        }
+    } else {
+        toast.success("Template saved!");
     }
 };
 

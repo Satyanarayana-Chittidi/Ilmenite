@@ -1,4 +1,4 @@
-﻿import { syncSettingsGroupToCloud } from '../services/cloudCodeService';
+import { syncSettingsGroupToCloud } from '../services/cloudCodeService';
 import { useEffect } from 'react';
 import { ShortcutSettings } from '../../types/types';
 import { DEFAULT_SHORTCUT_SETTINGS } from '../../data/constants';

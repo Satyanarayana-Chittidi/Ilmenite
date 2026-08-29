@@ -1,4 +1,4 @@
-﻿import { create } from "zustand";
+import { create } from "zustand";
 import { EditorSettingsTypes, TestCaseArray, ShortcutSettings, CustomSnippetsByLanguage } from "../types/types";
 import themesJSON from '../../themes/themelist.json';
 import { DEFAULT_EDITOR_SETTINGS, DEFAULT_SHORTCUT_SETTINGS } from "../data/constants";

@@ -1,4 +1,4 @@
-﻿import { useCFStore } from '../../zustand/useCFStore';
+import { useCFStore } from '../../zustand/useCFStore';
 import { adjustCodeForJudge0 } from '../codeAdjustments';
 import { EXECUTE_CODE_LIMIT } from '../../data/constants';
 import { useState, MutableRefObject } from 'react';

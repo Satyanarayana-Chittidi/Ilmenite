@@ -1,4 +1,4 @@
-﻿import { useCFStore } from '../../zustand/useCFStore';
+import { useCFStore } from '../../zustand/useCFStore';
 import { getValueFromLanguage } from '../helper';
 import { loadCodeWithCursor } from '../codeHandlers';
 import * as monaco from 'monaco-editor';
@@ -42,21 +42,19 @@ export const useCodeManagement = (monacoInstanceRef: React.MutableRefObject<mona
             () => browserAPI.runtime.lastError
         );
         if (monaco) {
-            const isPlusUser = useCFStore.getState().isPlusUser;
-            const autoSuggestions = useCFStore.getState().editorSettings.autoSuggestions;
+            const { autoSuggestions, cursorSmoothCaretAnimation } = useCFStore.getState().editorSettings;
             
             monaco.editor.getEditors().forEach(editor => {
                 const model = editor.getModel();
                 if (model) {
                     monaco.editor.setModelLanguage(model, selectedLanguage);
                 }
-                const cursorSmoothCaretAnimation = useCFStore.getState().editorSettings.cursorSmoothCaretAnimation;
                 
                 editor.updateOptions({
-                    quickSuggestions: !isPlusUser ? false : autoSuggestions,
-                    suggestOnTriggerCharacters: !isPlusUser ? false : autoSuggestions,
-                    wordBasedSuggestions: !isPlusUser ? 'off' : (autoSuggestions ? 'currentDocument' : 'off'),
-                    cursorSmoothCaretAnimation: !isPlusUser ? 'off' : cursorSmoothCaretAnimation,
+                    quickSuggestions: autoSuggestions ? { other: true, comments: true, strings: true } : false,
+                    suggestOnTriggerCharacters: autoSuggestions,
+                    wordBasedSuggestions: autoSuggestions ? 'currentDocument' : 'off',
+                    cursorSmoothCaretAnimation: cursorSmoothCaretAnimation,
                 });
             });
         }
@@ -69,17 +67,15 @@ export const useCodeManagement = (monacoInstanceRef: React.MutableRefObject<mona
         localStorage.setItem('preferredFontSize', selectedFontSize.toString());
         
         if (monaco) {
-            const isPlusUser = useCFStore.getState().isPlusUser;
-            const autoSuggestions = useCFStore.getState().editorSettings.autoSuggestions;
-            const cursorSmoothCaretAnimation = useCFStore.getState().editorSettings.cursorSmoothCaretAnimation;
+            const { autoSuggestions, cursorSmoothCaretAnimation } = useCFStore.getState().editorSettings;
             
             monaco.editor.getEditors().forEach(editor => {
                 editor.updateOptions({
                     fontSize: selectedFontSize,
-                    quickSuggestions: !isPlusUser ? false : autoSuggestions,
-                    suggestOnTriggerCharacters: !isPlusUser ? false : autoSuggestions,
-                    wordBasedSuggestions: !isPlusUser ? 'off' : (autoSuggestions ? 'currentDocument' : 'off'),
-                    cursorSmoothCaretAnimation: !isPlusUser ? 'off' : cursorSmoothCaretAnimation,
+                    quickSuggestions: autoSuggestions,
+                    suggestOnTriggerCharacters: autoSuggestions,
+                    wordBasedSuggestions: autoSuggestions ? 'currentDocument' : 'off',
+                    cursorSmoothCaretAnimation: cursorSmoothCaretAnimation,
                 });
             });
         }

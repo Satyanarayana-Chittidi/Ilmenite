@@ -1,4 +1,4 @@
-﻿import { handleSaveTemplate } from "../../utils/localStorageHelper";
+import { handleSaveTemplate } from "../../utils/localStorageHelper";
 import React, { useEffect, useRef, useState } from "react";
 import { SettingsProps } from "../../types/types";
 import Footer from "../global/Footer";

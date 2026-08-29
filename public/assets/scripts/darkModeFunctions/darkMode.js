@@ -198,7 +198,7 @@ const applyCustomThemeSettings = (settings) => {
   }
 
   customStyleElement = document.createElement("style");
-
+  
   // Safe defaults
   const bgHex = settings.bgHex || '#0f0f0f';
   const brightness = settings.brightness !== undefined ? settings.brightness : 100;

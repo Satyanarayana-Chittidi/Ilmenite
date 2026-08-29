@@ -1,4 +1,4 @@
-﻿import * as monaco from 'monaco-editor';
+import * as monaco from 'monaco-editor';
 
 export const loadCodeWithCursor = (editor: monaco.editor.IStandaloneCodeEditor | null, code: string, focusEditor: boolean = false) => {
     if (!editor) {

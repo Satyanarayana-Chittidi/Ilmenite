@@ -1,10 +1,11 @@
-﻿import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import './App.css';
 import Options from './components/options/page';
 import Main from './components/main/page';
 import { browserAPI } from './utils/browser/browserDetect';
 import { useCFStore } from './zustand/useCFStore';
 import { getCloudCodeCount, syncSettingsFromCloud } from './utils/services/cloudCodeService';
+import { DEFAULT_EDITOR_SETTINGS, DEFAULT_SHORTCUT_SETTINGS } from './data/constants';
 
 import { Code2 } from 'lucide-react';
 
@@ -73,10 +74,10 @@ const App = () => {
                 useCFStore.getState().setCustomSnippets(res.customSnippets);
             }
             if (res.editorSettings !== undefined) {
-                useCFStore.getState().setEditorSettings(res.editorSettings);
+                useCFStore.getState().setEditorSettings({ ...DEFAULT_EDITOR_SETTINGS, ...res.editorSettings });
             }
             if (res.shortcutSettings !== undefined) {
-                useCFStore.getState().setShortcutSettings(res.shortcutSettings);
+                useCFStore.getState().setShortcutSettings({ ...DEFAULT_SHORTCUT_SETTINGS, ...res.shortcutSettings });
             }
             if (res.themeCustomSettings !== undefined) {
                 localStorage.setItem('themeCustomSettings', JSON.stringify(res.themeCustomSettings));

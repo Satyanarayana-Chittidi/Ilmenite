@@ -1,9 +1,9 @@
-﻿import { CodeEntry, TestCaseArray } from '../../types/types';
+import { CodeEntry, TestCaseArray } from '../../types/types';
 import { getCodeMap, getSlugQueue, getTestCaseMap, getTestCaseQueue } from '../helper';
 import { MAX_PROBLEM_IO_SIZE, SINGLE_CODE_LIMIT_BYTES, STORAGE_LIMIT_BYTES } from '../../data/constants';
 import * as monaco from 'monaco-editor';
 import { useCFStore } from '../../zustand/useCFStore';
-import { saveCloudCode } from './cloudCodeService';
+import { saveCloudCode, getCloudCodeCount } from './cloudCodeService';
 import LZString from 'lz-string';
 
 export const saveCodeForSlug = async (
@@ -25,6 +25,7 @@ export const saveCodeForSlug = async (
         const codeMap = getCodeMap();
         const slugQueue = getSlugQueue();
 
+        const isPlusUser = useCFStore.getState().isPlusUser;
         const position = editor.getPosition();
         const cursorPos = position ? editor.getModel()?.getOffsetAt(position) : undefined;
         const codeWithCursor = editorValue.slice(0, cursorPos) + "$0" + editorValue.slice(cursorPos);
@@ -37,7 +38,8 @@ export const saveCodeForSlug = async (
         const oldSize = codeMap.get(slug)?.size || 0;
         let newTotalSize = totalSize - oldSize + size;
 
-        const maxFiles = 50;
+        // Allow Plus users to store more files locally, but still respect byte limit
+        const maxFiles = isPlusUser ? 50 : 5;
 
         // Enforce max files OR byte limit for all users to prevent localStorage QuotaExceededError
         while (newTotalSize > STORAGE_LIMIT_BYTES || slugQueue.size() > maxFiles) {
@@ -66,13 +68,25 @@ export const saveCodeForSlug = async (
             console.error("Local storage quota exceeded. Unable to save codeMap locally.", e);
         }
 
-        if (useCFStore.getState().isPlusUser && syncToCloud) {
+        const store = useCFStore.getState();
+        if (syncToCloud && store.isLoggedIn && store.isPlusUser) {
             useCFStore.getState().setCloudSaveStatus('saving');
+            console.log(`[Storage] Triggering cloud save for ${slug}`);
             const minDelay = new Promise(resolve => setTimeout(resolve, 1000));
             const savePromise = saveCloudCode(slug, compressedCode);
             
-            Promise.all([savePromise, minDelay]).then(() => {
-                useCFStore.getState().setCloudSaveStatus('saved');
+            Promise.all([savePromise, minDelay]).then(([saved]) => {
+                if (saved) {
+                    useCFStore.getState().setCloudSaveStatus('saved');
+                    console.log(`[Storage] Cloud save succeeded for ${slug}`);
+                    // Refresh cloud code count after successful save
+                    getCloudCodeCount().then(count => {
+                        useCFStore.getState().setCloudCodeCount(count);
+                    }).catch(() => {});
+                } else {
+                    useCFStore.getState().setCloudSaveStatus('idle');
+                    console.log(`[Storage] Cloud save failed for ${slug}`);
+                }
                 setTimeout(() => {
                     useCFStore.getState().setCloudSaveStatus('idle');
                 }, 2000);
@@ -148,6 +162,3 @@ export const syncCurrentCodeToCloud = async (slug: string) => {
         await saveCloudCode(slug, entry.code);
     }
 };
-
-
-

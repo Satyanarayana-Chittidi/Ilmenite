@@ -1,4 +1,4 @@
-﻿import { syncSnippetsToCloud } from '../services/cloudCodeService';
+import { syncSnippetsToCloud } from '../services/cloudCodeService';
 import { CustomSnippetsByLanguage } from "../../types/types";
 import { browserAPI } from "../browser/browserDetect";
 import { useCFStore } from "../../zustand/useCFStore";
@@ -11,7 +11,6 @@ export const useCustomSnippets = () => {
         setCustomSnippets(newSnippets);
         localStorage.setItem('customSnippets', JSON.stringify(newSnippets));
         browserAPI.storage.local.set({ customSnippets: newSnippets });
-        syncSnippetsToCloud();
     };
 
     return { customSnippets, saveCustomSnippets };

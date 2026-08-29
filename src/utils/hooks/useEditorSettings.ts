@@ -1,4 +1,4 @@
-﻿import { syncAllSettingsToCloud } from '../services/cloudCodeService';
+import { syncAllSettingsToCloud } from '../services/cloudCodeService';
 import * as monaco from 'monaco-editor';
 import { EditorSettingsTypes, IVimEditor } from '../../types/types';
 import { DEFAULT_EDITOR_SETTINGS } from '../../data/constants';
@@ -30,7 +30,6 @@ export const useEditorSettings = (editorSettings: EditorSettingsTypes, setEditor
     const saveEditorSettings = () => {
         localStorage.setItem('editorSettings', JSON.stringify(editorSettings));
         applyEditorSettings();
-        syncAllSettingsToCloud();
     };
 
     const applyEditorSettings = (): void => {
@@ -55,7 +54,7 @@ export const useEditorSettings = (editorSettings: EditorSettingsTypes, setEditor
                     enabled: false
                 },
                 lineNumbers: editorSettings.lineNumbers,
-                quickSuggestions: editorSettings.autoSuggestions,
+                quickSuggestions: editorSettings.autoSuggestions ? { other: true, comments: true, strings: true } : false,
                 suggestOnTriggerCharacters: editorSettings.autoSuggestions,
                 wordBasedSuggestions: editorSettings.autoSuggestions ? 'currentDocument' : 'off',
                 tabCompletion: 'on',

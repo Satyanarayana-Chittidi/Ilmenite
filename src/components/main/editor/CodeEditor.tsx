@@ -1,5 +1,6 @@
-﻿import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import * as monaco from 'monaco-editor';
+
 import { CodeEditorProps, EditorSettingsTypes, IVimEditor } from '../../../types/types';
 import themesJSON from '../../../../themes/themelist.json';
 import { useEditorSettings } from '../../../utils/hooks/useEditorSettings';
@@ -52,6 +53,7 @@ const CodeEditor = React.memo(({ monacoInstanceRef, language, fontSize, template
 
             if (editorRef.current && !monacoInstanceRef.current) {
                 const editorSettings:EditorSettingsTypes = getEditorSettings();
+                console.log(`[Autocomplete Log] Creating Monaco instance. Initial autoSuggestions = ${editorSettings.autoSuggestions}`);
                 monacoInstanceRef.current = monaco.editor.create(editorRef.current, {
                     language: language,
                     theme: resolveTheme(theme, editorSettings.theme),
@@ -84,8 +86,6 @@ const CodeEditor = React.memo(({ monacoInstanceRef, language, fontSize, template
                     wordBasedSuggestions: editorSettings.autoSuggestions ? 'currentDocument' : 'off',
                     cursorSmoothCaretAnimation: editorSettings.cursorSmoothCaretAnimation,
                     cursorStyle: editorSettings.cursorStyle || 'line',
-                    tabCompletion: 'on',
-                    acceptSuggestionOnEnter: 'on',
                 });
 
                 if (templateCode) {
@@ -93,12 +93,14 @@ const CodeEditor = React.memo(({ monacoInstanceRef, language, fontSize, template
                 }
             }
 
-            const vimEditor = monacoInstanceRef.current! as IVimEditor
-            vimEditor.vimStatusRef = vimStatusRef;
+            if (monacoInstanceRef.current) {
+                const vimEditor = monacoInstanceRef.current as IVimEditor;
+                vimEditor.vimStatusRef = vimStatusRef;
 
-            const currentKeyBinding = editorSettings.keyBinding;
-            if(currentKeyBinding == "vim") {
-                vimEditor.vimMode = initVimMode(monacoInstanceRef.current, vimStatusRef.current);
+                const currentKeyBinding = editorSettings.keyBinding;
+                if(currentKeyBinding == "vim") {
+                    vimEditor.vimMode = initVimMode(monacoInstanceRef.current, vimStatusRef.current);
+                }
             }
         };
 
@@ -116,6 +118,7 @@ const CodeEditor = React.memo(({ monacoInstanceRef, language, fontSize, template
         if (monacoInstanceRef.current && monaco) {
             monaco.editor.setTheme(resolveTheme(theme, editorSettings.theme));
             
+            console.log(`[Autocomplete Log] CodeEditor useEffect: updating Monaco options. autoSuggestions = ${editorSettings.autoSuggestions}`);
             monacoInstanceRef.current.updateOptions({
                 suggestOnTriggerCharacters: editorSettings.autoSuggestions,
                 quickSuggestions: editorSettings.autoSuggestions,
@@ -154,9 +157,17 @@ const CodeEditor = React.memo(({ monacoInstanceRef, language, fontSize, template
                     debounceTimer = window.setTimeout(() => {
                         const editor = monacoInstanceRef.current;
                         if (editor) {
-                            saveCodeForSlug(slug, editor, useCFStore.getState().totalSize, useCFStore.getState().setTotalSize);
+                            saveCodeForSlug(slug, editor, useCFStore.getState().totalSize, useCFStore.getState().setTotalSize, false);
                         }
                     }, 1000);
+                });
+
+                monacoInstanceRef.current.onDidBlurEditorWidget(() => {
+                    const slug = useCFStore.getState().currentSlug;
+                    const editor = monacoInstanceRef.current;
+                    if (slug && editor) {
+                        saveCodeForSlug(slug, editor, useCFStore.getState().totalSize, useCFStore.getState().setTotalSize, true);
+                    }
                 });
             }
         }, 100);
@@ -177,5 +188,3 @@ const CodeEditor = React.memo(({ monacoInstanceRef, language, fontSize, template
 });
 
 export default CodeEditor;
-
-

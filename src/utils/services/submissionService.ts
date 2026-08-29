@@ -1,4 +1,4 @@
-﻿import { getProblemName } from "../dom/getProblemName";
+import { getProblemName } from "../dom/getProblemName";
 import { getProblemUrl } from "../dom/getProblemUrl";
 import { getUserId } from "../dom/getUserId";
 import * as monaco from 'monaco-editor';

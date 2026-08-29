@@ -1,32 +1,63 @@
-﻿import { browserAPI } from '../browser/browserDetect';
 import { supabaseClient as supabase } from '../supabaseClient';
 import LZString from 'lz-string';
-import { DEFAULT_EDITOR_SETTINGS, DEFAULT_SHORTCUT_SETTINGS } from '../../data/constants';
 import { useCFStore } from '../../zustand/useCFStore';
 import { toast } from 'sonner';
+import { browserAPI } from '../browser/browserDetect';
 
+let sessionPromise: Promise<any> | null = null;
 const lastSyncedCloudCode = new Map<string, string>();
 
 const getAuthenticatedSession = async () => {
-    const session = useCFStore.getState().session;
-    if (!session) return null;
+    const store = useCFStore.getState();
+    if (!store.isLoggedIn || !store.isPlusUser) return null;
 
-    const { data } = await supabase.auth.getSession();
-    if (data?.session?.access_token === session.access_token) {
-        return session;
-    }
+    if (sessionPromise) return sessionPromise;
+    sessionPromise = (async () => {
+        try {
+            // ALWAYS get the freshest session from Chrome Storage because other tabs/sidepanel might have refreshed it
+            const storageRes = await new Promise<any>((resolve) => browserAPI.storage.local.get(['session'], resolve));
+            const freshSession = storageRes.session;
+            
+            if (!freshSession) {
+                return null;
+            }
 
-    const { error } = await supabase.auth.setSession({
-        access_token: session.access_token,
-        refresh_token: session.refresh_token
-    });
+            // Sync Zustand with the freshest storage session
+            useCFStore.getState().setSession(freshSession);
 
-    if (error) {
-        console.error("Failed to set Supabase session", error);
-        toast.error("Auth Error: " + error.message);
-        return null;
-    }
-    return session;
+            const { data } = await supabase.auth.getSession();
+            
+            // If Supabase client already has this exact session, we're good
+            if (data?.session?.access_token === freshSession.access_token) {
+                return freshSession;
+            }
+
+            // Only manually setSession if Supabase client lost it but we still have tokens
+            const { error, data: newSessionData } = await supabase.auth.setSession({
+                access_token: freshSession.access_token,
+                refresh_token: freshSession.refresh_token
+            });
+
+            if (error) {
+                console.error("Failed to set Supabase session", error);
+                return null;
+            }
+            
+            if (newSessionData?.session) {
+                useCFStore.getState().setSession(newSessionData.session);
+                browserAPI.storage.local.set({ session: newSessionData.session });
+                return newSessionData.session;
+            }
+            
+            return freshSession;
+        } catch (err) {
+            console.error("Session error:", err);
+            return null;
+        } finally {
+            sessionPromise = null;
+        }
+    })();
+    return sessionPromise;
 };
 
 /**
@@ -36,47 +67,31 @@ const getAuthenticatedSession = async () => {
  */
 export const fetchCloudCode = async (slug: string): Promise<string | null> => {
     try {
+        const store = useCFStore.getState();
+        if (!store.isLoggedIn || !store.isPlusUser) return null;
+
         const session = await getAuthenticatedSession();
         if (!session?.user) return null;
 
         const { data, error } = await supabase
             .from('files')
-            .select('content, profiles(tier)')
+            .select('content')
             .eq('user_id', session.user.id)
             .eq('file_name', slug)
-            .single();
+            .maybeSingle();
 
         if (error) {
-            if (error.message && error.message.includes('row-level security policy')) {
-                if (useCFStore.getState().isPlusUser) {
-                    useCFStore.getState().setIsPlusUser(false);
-                    toast.error("Your subscription tier could not be verified. You have been downgraded to Free.", {
-                        duration: 5000,
-                    });
-                }
+            if (error.code !== 'PGRST116') {
+                console.error("Fetch error:", error);
             }
             return null;
         }
         if (!data) return null;
 
-        // Piggyback validation
-        // @ts-ignore - Ignoring types since profiles is joined dynamically
-        if (data.profiles) {
-            if (data.profiles.tier !== 'plus' && useCFStore.getState().isPlusUser) {
-                useCFStore.getState().setIsPlusUser(false);
-                toast.error("Your subscription tier could not be verified. You have been downgraded to Free.", {
-                    duration: 5000,
-                });
-                return null;
-            } else if (data.profiles.tier === 'plus' && !useCFStore.getState().isPlusUser) {
-                useCFStore.getState().setIsPlusUser(true);
-            }
-        }
-
         // Return raw compressed payload for direct local storage write
         if (data.content) {
             lastSyncedCloudCode.set(slug, data.content);
-            
+            toast.success("Loaded code from cloud!", { duration: 2000 });
         }
         return data.content || null;
     } catch (err) {
@@ -122,8 +137,6 @@ export const deleteAllCloudCodes = async (): Promise<boolean> => {
             .eq('user_id', session.user.id);
 
         if (error) throw error;
-        // @ts-ignore
-        if (!data || data.length === 0) { throw new Error('Update affected 0 rows. Check RLS policies.'); }
         return true;
     } catch (err) {
         console.error("Failed to delete all cloud codes", err);
@@ -146,19 +159,9 @@ export const saveCloudTemplate = async (templateCode: string): Promise<boolean> 
         }, { onConflict: 'user_id, file_name' });
 
         if (error) throw error;
-        // @ts-ignore
-        if (!data || data.length === 0) { throw new Error('Update affected 0 rows. Check RLS policies.'); }
         return true;
-    } catch (err: any) {
+    } catch (err) {
         console.error("Failed to save template to cloud", err);
-        if (err.message && err.message.includes('row-level security policy')) {
-            if (useCFStore.getState().isPlusUser) {
-                useCFStore.getState().setIsPlusUser(false);
-                toast.error("Your subscription tier could not be verified. You have been downgraded to Free.", {
-                    duration: 5000,
-                });
-            }
-        }
         return false;
     }
 };
@@ -175,10 +178,6 @@ export const fetchCloudTemplate = async (): Promise<string | null> => {
  */
 export const saveCloudCode = async (slug: string, code: string): Promise<boolean> => {
     try {
-        if (lastSyncedCloudCode.get(slug) === code) {
-            return true;
-        }
-
         const session = await getAuthenticatedSession();
         if (!session?.user) return false;
 
@@ -187,36 +186,18 @@ export const saveCloudCode = async (slug: string, code: string): Promise<boolean
             file_name: slug,
             content: code,
         }, { onConflict: 'user_id, file_name' })
-        .select('id, profiles(tier)')
+        .select('id')
         .single();
 
         if (error) throw error;
 
-        // Piggyback validation
-        // @ts-ignore - Ignoring types since profiles is joined dynamically
-        if (data?.profiles) {
-            if (data.profiles.tier !== 'plus' && useCFStore.getState().isPlusUser) {
-                useCFStore.getState().setIsPlusUser(false);
-                toast.error("Your subscription tier could not be verified. You have been downgraded to Free.", {
-                    duration: 5000,
-                });
-                return false;
-            } else if (data.profiles.tier === 'plus' && !useCFStore.getState().isPlusUser) {
-                useCFStore.getState().setIsPlusUser(true);
-            }
-        }
         lastSyncedCloudCode.set(slug, code);
-        
+        console.log(`[Cloud Code] Successfully saved code for slug: ${slug}`);
         return true;
     } catch (err: any) {
         console.error("Failed to save cloud code", err);
         if (err.message && err.message.includes('row-level security policy')) {
-            if (useCFStore.getState().isPlusUser) {
-                useCFStore.getState().setIsPlusUser(false);
-                toast.error("Your subscription tier could not be verified. You have been downgraded to Free.", {
-                    duration: 5000,
-                });
-            }
+            console.error("RLS policy failed.");
         } else {
             toast.error("Cloud Save Failed: " + (err.message || JSON.stringify(err)));
         }
@@ -224,27 +205,58 @@ export const saveCloudCode = async (slug: string, code: string): Promise<boolean
     }
 };
 
-export const saveSettingsToCloud = async (settings: any, snippets: any) => {
-    const session = await getAuthenticatedSession();
-    if (!session) return false;
-
+/**
+ * Settings Synchronization Functions
+ */
+export const syncSettingsGroupToCloud = async () => {
     try {
-        const { data, error } = await supabase
-            .from('profiles')
-            .update({ settings, snippets })
-            .eq('id', session.user.id)
-            .select();
+        const store = useCFStore.getState();
+        if (!store.isLoggedIn || !store.isPlusUser) return false;
 
+        const data = await new Promise<any>(resolve => browserAPI.storage.local.get(['editorSettings', 'shortcutSettings', 'themeCustomSettings', 'changeUI'], resolve));
+        
+        const settings = {
+            editorSettings: data.editorSettings || JSON.parse(localStorage.getItem('editorSettings') || '{}'),
+            shortcutSettings: data.shortcutSettings || JSON.parse(localStorage.getItem('shortcutSettings') || '{}'),
+            themeCustomSettings: data.themeCustomSettings || JSON.parse(localStorage.getItem('themeCustomSettings') || '{}'),
+            changeUI: data.changeUI || localStorage.getItem('changeUI') || 'true'
+        };
+        
+        const session = await getAuthenticatedSession();
+        if (!session) return false;
+        
+        const { error } = await supabase.from('profiles').update({ settings }).eq('id', session.user.id);
         if (error) throw error;
-        if (!data || data.length === 0) {
-            console.error("Failed to save to cloud: 0 rows updated. Check if the RLS policy allows UPDATE for profiles.");
-            throw new Error("0 rows updated");
-        }
-        return true;
-    } catch (err: any) {
-        console.error("Failed to save settings to cloud", err.message, err.details, err.hint, err);
-        return false;
+        console.log(`[Settings] Synced settings group to cloud`);
+    } catch (e) {
+        console.error("Failed to sync settings to cloud", e);
     }
+};
+
+export const syncSnippetsToCloud = async () => {
+    try {
+        const store = useCFStore.getState();
+        if (!store.isLoggedIn || !store.isPlusUser) return false;
+
+        const data = await new Promise<any>(resolve => browserAPI.storage.local.get(['customSnippets'], resolve));
+        const snippets = data.customSnippets || JSON.parse(localStorage.getItem('customSnippets') || '{}');
+        
+        const session = await getAuthenticatedSession();
+        if (!session) return false;
+        
+        const { error } = await supabase.from('profiles').update({ snippets }).eq('id', session.user.id);
+        if (error) throw error;
+        console.log(`[Settings] Synced snippets to cloud`);
+    } catch (e) {
+        console.error("Failed to sync snippets to cloud", e);
+    }
+};
+
+export const syncAllSettingsToCloud = async () => {
+    await Promise.all([
+        syncSettingsGroupToCloud(),
+        syncSnippetsToCloud()
+    ]);
 };
 
 export const fetchSettingsFromCloud = async () => {
@@ -256,57 +268,14 @@ export const fetchSettingsFromCloud = async () => {
             .from('profiles')
             .select('settings, snippets')
             .eq('id', session.user.id)
-            .single();
+            .maybeSingle();
 
-        if (error) throw error;
+        if (error && error.code !== 'PGRST116') throw error;
         return data;
     } catch (err: any) {
         console.error("Failed to fetch settings from cloud", err);
         return null;
     }
-};
-
-export const syncSettingsGroupToCloud = async () => {
-    try {
-        const editorSettings = JSON.parse(localStorage.getItem('editorSettings') || '{}');
-        const shortcutSettings = JSON.parse(localStorage.getItem('shortcutSettings') || '{}');
-        const themeCustomSettings = JSON.parse(localStorage.getItem('themeCustomSettings') || '{}');
-        const changeUI = localStorage.getItem('changeUI') || 'true';
-        
-        const settings = {
-            editorSettings,
-            shortcutSettings,
-            themeCustomSettings,
-            changeUI
-        };
-        
-        const session = await getAuthenticatedSession();
-        if (!session) return false;
-        
-        const { error } = await supabase.from('profiles').update({ settings }).eq('id', session.user.id);
-        if (error) throw error;
-    } catch (e) {
-        console.error("Failed to sync settings to cloud", e);
-    }
-};
-
-export const syncSnippetsToCloud = async () => {
-    try {
-        const snippets = JSON.parse(localStorage.getItem('customSnippets') || '{}');
-        
-        const session = await getAuthenticatedSession();
-        if (!session) return false;
-        
-        const { error } = await supabase.from('profiles').update({ snippets }).eq('id', session.user.id);
-        if (error) throw error;
-    } catch (e) {
-        console.error("Failed to sync snippets to cloud", e);
-    }
-};
-
-export const syncAllSettingsToCloud = async () => {
-    await syncSettingsGroupToCloud();
-    await syncSnippetsToCloud();
 };
 
 export const syncSettingsFromCloud = async () => {
@@ -315,10 +284,10 @@ export const syncSettingsFromCloud = async () => {
         if (data) {
             if (data.settings) {
                 if (data.settings.editorSettings) {
-                    useCFStore.getState().setEditorSettings({ ...DEFAULT_EDITOR_SETTINGS, ...data.settings.editorSettings });
+                    useCFStore.getState().setEditorSettings({ ...useCFStore.getState().editorSettings, ...data.settings.editorSettings });
                 }
                 if (data.settings.shortcutSettings) {
-                    useCFStore.getState().setShortcutSettings({ ...DEFAULT_SHORTCUT_SETTINGS, ...data.settings.shortcutSettings });
+                    useCFStore.getState().setShortcutSettings({ ...useCFStore.getState().shortcutSettings, ...data.settings.shortcutSettings });
                 }
                 if (data.settings.themeCustomSettings) {
                     localStorage.setItem('themeCustomSettings', JSON.stringify(data.settings.themeCustomSettings));
@@ -331,19 +300,24 @@ export const syncSettingsFromCloud = async () => {
             }
             if (data.snippets) {
                 useCFStore.getState().setCustomSnippets(data.snippets);
+                localStorage.setItem('customSnippets', JSON.stringify(data.snippets));
                 browserAPI.storage.local.set({ customSnippets: data.snippets });
             }
+            console.log("[Settings] Successfully fetched and applied settings from cloud", data);
         }
+
+        // Fetch user template from cloud and sync to local storage
+        if (useCFStore.getState().isLoggedIn && useCFStore.getState().isPlusUser) {
+            const cloudTemplate = await fetchCloudTemplate();
+            if (cloudTemplate) {
+                localStorage.setItem('template', cloudTemplate);
+                console.log("[Settings] Successfully fetched template from cloud");
+            }
+        }
+
         // Mark that we have successfully synced at least once in this browser
         browserAPI.storage.local.set({ hasSyncedFromCloud: true });
     } catch (e) {
         console.error("Failed to sync settings from cloud", e);
     }
 };
-
-
-
-
-
-
-

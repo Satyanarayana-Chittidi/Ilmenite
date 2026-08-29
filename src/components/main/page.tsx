@@ -1,6 +1,6 @@
-﻿import React, { useRef, useEffect, useState, Suspense } from 'react';
+import React, { useRef, useEffect, useState, Suspense } from 'react';
 import { useCFStore } from '../../zustand/useCFStore';
-import { formatCode, getCodeMap, getSlug } from '../../utils/helper';
+import { formatCode, getCodeMap, getSlug, getSlugQueue } from '../../utils/helper';
 import TopBar from './editor/TopBar';
 import TestCases from './testcases/TestCases';
 import { ResizablePanel } from '../global/ResizablePanel';
@@ -9,7 +9,7 @@ import { useCodeManagement } from '../../utils/hooks/useCodeManagement';
 import { useTestCases } from '../../utils/hooks/useTestCases';
 import { useTabEvents } from '../../utils/hooks/useTabEvents';
 import { handleSubmission } from '../../utils/services/submissionService';
-import { initializeStorage } from '../../utils/services/storageService';
+import { initializeStorage, saveCodeForSlug, saveTestCaseForSlug } from '../../utils/services/storageService';
 import { loadCodeWithCursor } from '../../utils/codeHandlers';
 import { fetchCloudCode } from '../../utils/services/cloudCodeService';
 import LZString from 'lz-string';
@@ -166,9 +166,24 @@ const Main: React.FC<MainProps> = ({ showOptionsRef, setShowOptions, theme }) =>
         window.addEventListener('keydown', handleKeyDown, { capture: true });
         window.addEventListener('keyup', handleKeyUp, { capture: true });
 
+        const handleVisibilityOrBlur = () => {
+            const editor = monacoInstanceRef.current;
+            if (editor && currentSlug) {
+                saveCodeForSlug(currentSlug, editor, useCFStore.getState().totalSize, useCFStore.getState().setTotalSize, true);
+                if (testCases && testCases.testCases.length > 0) {
+                    saveTestCaseForSlug(currentSlug, testCases);
+                }
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityOrBlur);
+        window.addEventListener('blur', handleVisibilityOrBlur);
+
         return () => {
             window.removeEventListener('keydown', handleKeyDown, { capture: true });
             window.removeEventListener('keyup', handleKeyUp, { capture: true });
+            document.removeEventListener('visibilitychange', handleVisibilityOrBlur);
+            window.removeEventListener('blur', handleVisibilityOrBlur);
         };
     }, [currentSlug, runCode, handleSubmission]);
 

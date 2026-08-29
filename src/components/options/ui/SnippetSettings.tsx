@@ -1,9 +1,10 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Scissors, Plus, Trash2, Save } from 'lucide-react';
 import { useCFStore } from '../../../zustand/useCFStore';
 import { useCustomSnippets } from '../../../utils/hooks/useCustomSnippets';
 import { CustomSnippet } from '../../../types/types';
+import { syncSnippetsToCloud } from '../../../utils/services/cloudCodeService';
 
 interface SnippetSettingsProps {
     isOpen: boolean;
@@ -135,7 +136,12 @@ const SnippetSettings: React.FC<SnippetSettingsProps> = ({ isOpen, onClose }) =>
     const handleRemoveSnippet = (id: string) => {
         const updated = localSnippets.filter(s => s.id !== id);
         setLocalSnippets(updated);
-        saveChangesToStore(updated);
+        const newSnippets = {
+            ...customSnippets,
+            [language]: updated
+        };
+        saveCustomSnippets(newSnippets);
+        syncSnippetsToCloud();
     };
 
     const handleChangeSnippet = (id: string, field: keyof CustomSnippet, value: string) => {
@@ -151,6 +157,7 @@ const SnippetSettings: React.FC<SnippetSettingsProps> = ({ isOpen, onClose }) =>
             [language]: validSnippets
         };
         saveCustomSnippets(newSnippets);
+        syncSnippetsToCloud();
     };
 
     const handleSaveOnBlur = () => {
