@@ -1,4 +1,4 @@
-import { handleSaveTemplate } from "../../utils/localStorageHelper";
+import { handleSaveTemplate, handleRefreshTemplate } from "../../utils/localStorageHelper";
 import React, { useEffect, useRef, useState } from "react";
 import { SettingsProps } from "../../types/types";
 import Footer from "../global/Footer";
@@ -12,7 +12,7 @@ import { useCFStore } from "../../zustand/useCFStore";
 import * as monaco from 'monaco-editor';
 import { browserAPI } from "../../utils/browser/browserDetect";
 import { defaultThemeSettings } from "../../utils/themeUtils";
-import { Save } from "lucide-react";
+import { Save, RotateCcw } from "lucide-react";
 // import ApiSettings from "../global/ApiSettings";
 
 const Settings: React.FC<SettingsProps> = ({ setShowOptions, theme, setTheme }) => {
@@ -79,18 +79,33 @@ const Settings: React.FC<SettingsProps> = ({ setShowOptions, theme, setTheme }) 
                                 <p className="text-xl font-semibold text-gray-800 dark:text-white">Set your default template</p>
                                 <p className="text-[13px] font-semibold text-gray-900 dark:text-gray-300 pr-4">Use symbol <span className="font-[500] px-2 rounded-md bg-gray-300 dark:bg-gray-600">$0</span> to set your default cursor position in template.</p>
                             </div>
-                            <button 
-                                onClick={() => {
-                                    handleSaveTemplate(monacoInstanceRef.current);
-                                }} 
-                                aria-label="Save template" 
-                                className={`group relative h-1/2 text-[#22c55e] text-sm px-2 py-1 font-bold rounded-lg gap-1 mt-1 bg-gray-200 dark:bg-[#2a2a2a] hover:bg-green-100 dark:hover:bg-green-900/30 transition-all duration-200 flex justify-center items-center shadow-sm`}
-                            >
-                                <div className={`flex items-center gap-1`}>
-                                    <Save color="#22c55e" size={18} />
-                                    Save
-                                </div>
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <button 
+                                    onClick={() => {
+                                        handleRefreshTemplate(monacoInstanceRef.current);
+                                    }} 
+                                    aria-label="Fetch cloud template" 
+                                    title="Fetch latest template from cloud"
+                                    className={`group relative h-1/2 text-blue-500 text-sm px-2.5 py-1 font-bold rounded-lg gap-1 mt-1 bg-gray-200 dark:bg-[#2a2a2a] hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all duration-200 flex justify-center items-center shadow-sm`}
+                                >
+                                    <div className={`flex items-center gap-1.5`}>
+                                        <RotateCcw color="#3b82f6" size={15} />
+                                        Refresh
+                                    </div>
+                                </button>
+                                <button 
+                                    onClick={() => {
+                                        handleSaveTemplate(monacoInstanceRef.current);
+                                    }} 
+                                    aria-label="Save template" 
+                                    className={`group relative h-1/2 text-[#22c55e] text-sm px-2.5 py-1 font-bold rounded-lg gap-1 mt-1 bg-gray-200 dark:bg-[#2a2a2a] hover:bg-green-100 dark:hover:bg-green-900/30 transition-all duration-200 flex justify-center items-center shadow-sm`}
+                                >
+                                    <div className={`flex items-center gap-1`}>
+                                        <Save color="#22c55e" size={18} />
+                                        Save
+                                    </div>
+                                </button>
+                            </div>
                         </div>
                         <div className="text-left mt-2 mb-20 w-full h-[28rem] relative">
                             <CodeEditor
