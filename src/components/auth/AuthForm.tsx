@@ -79,6 +79,16 @@ export const AuthForm: React.FC = () => {
                                     email: session.user?.email,
                                     supabaseAvatar: profile?.avatar_url || session.user?.user_metadata?.avatar_url || null
                                 });
+
+                                // Ensure status switch happens immediately in Zustand before fetching
+                                useCFStore.getState().setIsLoggedIn(true);
+                                useCFStore.getState().setIsPlusUser(isPlusUser);
+
+                                if (isPlusUser) {
+                                    import('../../utils/services/cloudCodeService').then(module => {
+                                        module.syncSettingsFromCloud();
+                                    });
+                                }
                             } else {
                                 // Log the URL for debugging if it fails
                                 console.error("OAuth Callback URL:", callbackUrl);

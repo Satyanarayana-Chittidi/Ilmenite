@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './App.css';
 import Options from './components/options/page';
 import Main from './components/main/page';
@@ -7,6 +7,11 @@ import { useCFStore } from './zustand/useCFStore';
 
 const App = () => {
     const [showOptions, setShowOptions] = useState<boolean>(false);
+    const showOptionsRef = useRef(showOptions);
+    useEffect(() => {
+        showOptionsRef.current = showOptions;
+    }, [showOptions]);
+
     const [theme, setTheme] = useState<"light" | "dark">((localStorage.getItem('theme') as "light" | "dark") || "dark");
 
     useEffect(() => {
@@ -67,18 +72,8 @@ const App = () => {
                     useCFStore.getState().setSupabaseAvatar(event.data.supabaseAvatar);
                 }
             }
-            if (event.data?.type === 'CF_WINDOW_METRICS') {
-                const { panelWidth, windowWidth } = event.data.payload;
-                const isWide = panelWidth > windowWidth * 0.5;
-                if (useCFStore.getState().isWidePanel !== isWide) {
-                    useCFStore.getState().setIsWidePanel(isWide);
-                }
-            }
         };
         window.addEventListener('message', handleMessage);
-
-        // Request initial metrics from parent in case we missed the load event
-        window.parent.postMessage({ type: 'CF_REQUEST_METRICS' }, '*');
 
         return () => {
             browserAPI.storage.onChanged.removeListener(handleStorageChange);
@@ -90,7 +85,7 @@ const App = () => {
         <div className="relative w-full h-full overflow-hidden">
             {/* Vertical Separator rendered as left border */}
             <div className={`w-full h-full border-l-2 dark:border-l-[1px] border-black dark:border-[#ccc]`}>
-                <Main showOptions={showOptions} setShowOptions={setShowOptions} theme={theme} />
+                <Main showOptionsRef={showOptionsRef} setShowOptions={setShowOptions} theme={theme} />
             </div>
 
             <div
