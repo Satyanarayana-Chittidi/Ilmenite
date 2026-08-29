@@ -1,31 +1,13 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
 import Options from './components/options/page';
 import Main from './components/main/page';
 import { browserAPI } from './utils/browser/browserDetect';
 import { useCFStore } from './zustand/useCFStore';
-import { getCloudCodeCount, syncSettingsFromCloud } from './utils/services/cloudCodeService';
-import { DEFAULT_EDITOR_SETTINGS, DEFAULT_SHORTCUT_SETTINGS } from './data/constants';
-
-import { Code2 } from 'lucide-react';
 
 const App = () => {
     const [showOptions, setShowOptions] = useState<boolean>(false);
-    const showOptionsRef = useRef<boolean>(false);
     const [theme, setTheme] = useState<"light" | "dark">((localStorage.getItem('theme') as "light" | "dark") || "dark");
-
-    const [isCollapsed, setIsCollapsed] = useState<boolean>(window.innerWidth <= 45);
-
-    const handleSetShowOptions = useCallback((val: boolean) => {
-        showOptionsRef.current = val;
-        setShowOptions(val);
-    }, []);
-
-    useEffect(() => {
-        const handleResize = () => setIsCollapsed(window.innerWidth <= 45);
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
 
     useEffect(() => {
         const handleStorageChange = (changes: any, areaName: string) => {
@@ -42,11 +24,8 @@ const App = () => {
             if (areaName === "local" && changes.email !== undefined) {
                 useCFStore.getState().setEmail(changes.email.newValue);
             }
-                        if (areaName === "local" && changes.session !== undefined) {
+            if (areaName === "local" && changes.session !== undefined) {
                 useCFStore.getState().setSession(changes.session.newValue);
-                if (changes.isLoggedIn?.newValue || useCFStore.getState().isLoggedIn) {
-                    syncSettingsFromCloud();
-                }
             }
             if (areaName === "local" && changes.supabaseAvatar !== undefined) {
                 useCFStore.getState().setSupabaseAvatar(changes.supabaseAvatar.newValue);
@@ -54,7 +33,7 @@ const App = () => {
         };
         browserAPI.storage.onChanged.addListener(handleStorageChange);
 
-        browserAPI.storage.local.get(['isPlusUser', 'isLoggedIn', 'email', 'session', 'supabaseAvatar', 'customSnippets', 'editorSettings', 'shortcutSettings', 'themeCustomSettings', 'changeUI', 'hasSyncedFromCloud'], (res) => {
+        browserAPI.storage.local.get(['isPlusUser', 'isLoggedIn', 'email', 'session', 'supabaseAvatar'], (res) => {
             if (res.isPlusUser !== undefined) {
                 useCFStore.getState().setIsPlusUser(res.isPlusUser);
             }
@@ -67,34 +46,8 @@ const App = () => {
             if (res.session !== undefined) {
                 useCFStore.getState().setSession(res.session);
             }
-                        if (res.supabaseAvatar !== undefined) {
+            if (res.supabaseAvatar !== undefined) {
                 useCFStore.getState().setSupabaseAvatar(res.supabaseAvatar);
-            }
-            if (res.customSnippets !== undefined) {
-                useCFStore.getState().setCustomSnippets(res.customSnippets);
-            }
-            if (res.editorSettings !== undefined) {
-                useCFStore.getState().setEditorSettings({ ...DEFAULT_EDITOR_SETTINGS, ...res.editorSettings });
-            }
-            if (res.shortcutSettings !== undefined) {
-                useCFStore.getState().setShortcutSettings({ ...DEFAULT_SHORTCUT_SETTINGS, ...res.shortcutSettings });
-            }
-            if (res.themeCustomSettings !== undefined) {
-                localStorage.setItem('themeCustomSettings', JSON.stringify(res.themeCustomSettings));
-            }
-            if (res.changeUI !== undefined) {
-                localStorage.setItem('changeUI', res.changeUI);
-            }
-
-            if (res.isLoggedIn && !res.hasSyncedFromCloud) {
-                // If we are logged in but haven't successfully synced yet, sync now.
-                syncSettingsFromCloud();
-            }
-
-            if (res.isLoggedIn && res.isPlusUser) {
-                getCloudCodeCount().then(count => {
-                    useCFStore.getState().setCloudCodeCount(count);
-                }).catch(err => console.error("Failed to fetch cloud code count", err));
             }
         });
 
@@ -114,8 +67,18 @@ const App = () => {
                     useCFStore.getState().setSupabaseAvatar(event.data.supabaseAvatar);
                 }
             }
+            if (event.data?.type === 'CF_WINDOW_METRICS') {
+                const { panelWidth, windowWidth } = event.data.payload;
+                const isWide = panelWidth > windowWidth * 0.5;
+                if (useCFStore.getState().isWidePanel !== isWide) {
+                    useCFStore.getState().setIsWidePanel(isWide);
+                }
+            }
         };
         window.addEventListener('message', handleMessage);
+
+        // Request initial metrics from parent in case we missed the load event
+        window.parent.postMessage({ type: 'CF_REQUEST_METRICS' }, '*');
 
         return () => {
             browserAPI.storage.onChanged.removeListener(handleStorageChange);
@@ -123,47 +86,19 @@ const App = () => {
         };
     }, []);
 
-    if (isCollapsed) {
-        return (
-            <div className={`relative w-full h-full overflow-hidden border-l-2 dark:border-l-[1px] border-black dark:border-[#ccc] ${theme === 'dark' ? 'bg-[#1e1e1e]' : 'bg-white'}`}>
-                <button
-                    onClick={() => {
-                        window.parent.postMessage({ type: 'CF_EXPAND_PANEL' }, '*');
-                    }}
-                    className="flex items-center justify-center gap-1.5 hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-pointer rounded-md"
-                    style={{ 
-                        transform: 'rotate(90deg)',
-                        transformOrigin: 'top left',
-                        position: 'absolute',
-                        top: '0',
-                        left: '36px',
-                        width: 'max-content',
-                        height: '32px',
-                        padding: '0 12px'
-                    }}
-                >
-                    <Code2 color={theme === 'light' ? '#22c55e' : '#4ade80'} size={20} />
-                    <span className="font-bold text-gray-800 dark:text-gray-200 tracking-wide select-none">
-                        <span className="font-serif tracking-normal">I</span>lmenite
-                    </span>
-                </button>
-            </div>
-        );
-    }
-
     return (
-        <div className="relative w-full h-full overflow-hidden" style={{ minWidth: '420px' }}>
-            
+        <div className="relative w-full h-full overflow-hidden">
             {/* Vertical Separator rendered as left border */}
             <div className={`w-full h-full border-l-2 dark:border-l-[1px] border-black dark:border-[#ccc]`}>
-                <Main showOptionsRef={showOptionsRef} setShowOptions={handleSetShowOptions} theme={theme} />
+                <Main showOptions={showOptions} setShowOptions={setShowOptions} theme={theme} />
             </div>
 
             <div
-                className={`z-[100] fixed top-0 right-0 h-full w-full max-w-full bg-white shadow-lg border-l-2 dark:border-l-[1px] border-black dark:border-[#ccc] transition-transform duration-300 ease-in-out transform will-change-transform ${showOptions ? 'translate-x-0' : 'translate-x-full'
+                className={`z-[100] fixed top-0 right-0 h-full w-full max-w-full bg-white shadow-lg border-l-2 dark:border-l-[1px] border-black dark:border-[#ccc] transition-transform duration-300 ease-in-out transform ${showOptions ? 'translate-x-0' : 'translate-x-full'
                     } dark:bg-[#111111]`}
             >
-                <Options setShowOptions={handleSetShowOptions}
+                <Options
+                    setShowOptions={setShowOptions}
                     theme={theme}
                     setTheme={setTheme}
                 />
@@ -173,9 +108,3 @@ const App = () => {
 };
 
 export default App;
-
-
-
-
-
-

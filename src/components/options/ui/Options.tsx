@@ -75,6 +75,7 @@ const Options = ({ theme, setTheme, changeUI, setChangeUI, setOpenConfirmationPo
     const buttonClass = "w-9 h-9 rounded-xl bg-white/50 dark:bg-[#2a2a2a]/50 backdrop-blur-md border border-black/5 dark:border-white/10 hover:bg-white/80 dark:hover:bg-[#3a3a3a]/80 transition-all duration-200 flex justify-center items-center shadow-sm";
 
     const currentUrl = useCFStore(state => state.currentUrl);
+    const isWidePanel = useCFStore(state => state.isWidePanel);
     const [isThemeCustomizerOpen, setIsThemeCustomizerOpen] = useState(false);
     const [isEditorSettingsOpen, setIsEditorSettingsOpen] = useState(false);
     const [isShortcutSettingsOpen, setIsShortcutSettingsOpen] = useState(false);
@@ -97,7 +98,6 @@ const Options = ({ theme, setTheme, changeUI, setChangeUI, setOpenConfirmationPo
 
     return (
         <>
-
             <EditorSettings
                 isOpen={isEditorSettingsOpen}
                 onClose={() => setIsEditorSettingsOpen(false)}
@@ -112,7 +112,7 @@ const Options = ({ theme, setTheme, changeUI, setChangeUI, setOpenConfirmationPo
                 onClose={() => setIsSnippetSettingsOpen(false)}
             />
             <div className="w-full py-4 max-w-3xl mx-auto">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className={`grid gap-3 ${isWidePanel ? 'grid-cols-2' : 'grid-cols-1'}`}>
                     <AccountBar />
                     <Option 
                         title="Appearance"

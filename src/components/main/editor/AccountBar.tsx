@@ -175,7 +175,7 @@ const AccountBar: React.FC<AccountBarProps> = ({ setShowUpgradePopup, setUpgrade
     );
 
     return (
-        <div className="col-span-1 md:col-span-2 w-full">
+        <div className="col-span-full w-full">
             <Option 
                 title={accountTitle}
                 expandedContent={

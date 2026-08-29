@@ -17,6 +17,7 @@ interface CFStoreInterface {
     editorSettings: EditorSettingsTypes;
     shortcutSettings: ShortcutSettings;
     customSnippets: CustomSnippetsByLanguage;
+    isWidePanel: boolean;
     
     // Setters
     setLanguage: (language: string) => void;
@@ -25,12 +26,14 @@ interface CFStoreInterface {
     setCurrentSlug: (slug: string | null) => void;
     setTotalSize: (size: number) => void;
     setTestCases: (testCases: TestCaseArray) => void;
-    setIsRunning: (running: boolean) => void;
-    setIsSubmitting: (submitting: boolean) => void;
-    setApiKey: (key: string) => void;
+    setIsRunning: (isRunning: boolean) => void;
+    setIsSubmitting: (isSubmitting: boolean) => void;
+    setApiKey: (apiKey: string) => void;
+    setEditorThemeList: (editorThemeList: Record<string, string>) => void;
     setEditorSettings: (editorSettings: EditorSettingsTypes) => void;
     setShortcutSettings: (shortcutSettings: ShortcutSettings) => void;
     setCustomSnippets: (customSnippets: CustomSnippetsByLanguage) => void;
+    setIsWidePanel: (isWide: boolean) => void;
     
     // Auth State
     isPlusUser: boolean;
@@ -72,6 +75,7 @@ export const useCFStore = create<CFStoreInterface>((set) => ({
     editorSettings: { ...DEFAULT_EDITOR_SETTINGS, ...(JSON.parse(localStorage.getItem('editorSettings') ?? 'null') || {}) },
     shortcutSettings: { ...DEFAULT_SHORTCUT_SETTINGS, ...(JSON.parse(localStorage.getItem('shortcutSettings') ?? 'null') || {}) },
     customSnippets: JSON.parse(localStorage.getItem('customSnippets') ?? 'null') ?? {},
+    isWidePanel: false,
     isPlusUser: localStorage.getItem('isPlusUser') === 'true', // load from local storage
     isLoggedIn: localStorage.getItem('isLoggedIn') === 'true', // Default to false unless explicitly true
     email: localStorage.getItem('email') || null,
@@ -83,14 +87,20 @@ export const useCFStore = create<CFStoreInterface>((set) => ({
     isLiveContest: new URLSearchParams(window.location.search).get('isLive') === 'true',
 
     // Actions
-    setLanguage: (language) => set({ language }), setFontSize: (size) => set({ fontSize: size }),
-    setCurrentUrl: (url) => set({ currentUrl: url }), setCurrentSlug: (slug) => set({ currentSlug: slug }),
-    setTotalSize: (size) => set({ totalSize: size }), setTestCases: (testCases) => set({ testCases }),
-    setIsRunning: (running) => set({ isRunning: running }), setIsSubmitting: (submitting) => set({ isSubmitting: submitting }),
-    setApiKey: (key) => { localStorage.setItem('judge0CEApiKey', key); set({ apiKey: key }); },
+    setLanguage: (language) => { localStorage.setItem('preferredLanguage', language); set({ language }); },
+    setFontSize: (fontSize) => { localStorage.setItem('preferredFontSize', fontSize.toString()); set({ fontSize }); },
+    setCurrentUrl: (currentUrl) => set({ currentUrl }),
+    setCurrentSlug: (currentSlug) => set({ currentSlug }),
+    setTotalSize: (totalSize) => set({ totalSize }),
+    setTestCases: (testCases) => set({ testCases }),
+    setIsRunning: (isRunning) => set({ isRunning }),
+    setIsSubmitting: (isSubmitting) => set({ isSubmitting }),
+    setApiKey: (apiKey) => { localStorage.setItem('judge0CEApiKey', apiKey); set({ apiKey }); },
+    setEditorThemeList: (editorThemeList) => set({ editorThemeList }),
     setEditorSettings: (editorSettings) => { localStorage.setItem('editorSettings', JSON.stringify(editorSettings)); set({ editorSettings }); },
     setShortcutSettings: (shortcutSettings) => { localStorage.setItem('shortcutSettings', JSON.stringify(shortcutSettings)); set({ shortcutSettings }); },
     setCustomSnippets: (customSnippets) => { localStorage.setItem('customSnippets', JSON.stringify(customSnippets)); set({ customSnippets }); },
+    setIsWidePanel: (isWidePanel) => set({ isWidePanel }),
     setIsPlusUser: (isPlus) => { localStorage.setItem('isPlusUser', String(isPlus)); set({ isPlusUser: isPlus }) },
     setIsLoggedIn: (isLogged) => { localStorage.setItem('isLoggedIn', String(isLogged)); set({ isLoggedIn: isLogged }) },
     setEmail: (email) => { if(email) localStorage.setItem('email', email); else localStorage.removeItem('email'); set({ email }) },

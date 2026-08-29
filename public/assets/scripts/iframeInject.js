@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
 	// Check if we are on a Codeforces problem page
 	const isProblemPage =
 		/^\/(?:problemset\/problem\/|contest\/\d+\/problem\/)/.test(
@@ -233,7 +233,7 @@
 			document.body.style.overflowX = "hidden";
 			document.body.style.boxSizing = "border-box";
 			
-			scrollSpacer.style.width = Math.max(0, panelWidth - 420) + "px";
+			scrollSpacer.style.width = Math.max(0, panelWidth - 420) + "px"; iframe.contentWindow?.postMessage({ type: "CF_WINDOW_METRICS", payload: { panelWidth, windowWidth: document.documentElement.clientWidth } }, "*");
 		}
 
 		function closePanel() {
@@ -276,7 +276,11 @@
                 resizer.style.right = `${panelWidth}px`;
                 document.body.style.paddingRight = `${panelWidth}px`;
                 scrollSpacer.style.width = Math.max(0, panelWidth - 420) + "px";
+                iframe.contentWindow?.postMessage({ type: "CF_WINDOW_METRICS", payload: { panelWidth, windowWidth: document.documentElement.clientWidth } }, "*");
                 browserAPI.storage.local.set({ sidePanelWidth: panelWidth });
+            }
+            if (event.data && event.data.type === 'CF_REQUEST_METRICS') {
+                iframe.contentWindow?.postMessage({ type: "CF_WINDOW_METRICS", payload: { panelWidth, windowWidth: document.documentElement.clientWidth } }, "*");
             }
         });
 
@@ -306,7 +310,7 @@
 				document.body.style.width = "100%";
 				document.body.style.paddingRight = `${panelWidth}px`;
 				
-				scrollSpacer.style.width = Math.max(0, panelWidth - 420) + "px";
+				scrollSpacer.style.width = Math.max(0, panelWidth - 420) + "px"; iframe.contentWindow?.postMessage({ type: "CF_WINDOW_METRICS", payload: { panelWidth, windowWidth: document.documentElement.clientWidth } }, "*");
 				
 				browserAPI.storage.local.set({ sidePanelWidth: panelWidth });
 			});
