@@ -11,7 +11,7 @@ import { registerCustomSnippets } from '../../../utils/snippets/registerSnippets
 import { useCustomSnippets } from '../../../utils/hooks/useCustomSnippets';
 
 const editorStyle: React.CSSProperties = {
-    height: '250px',
+    height: '100%',
     flexGrow: 1,
 };
 

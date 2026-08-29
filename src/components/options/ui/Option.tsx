@@ -12,13 +12,15 @@ const Option: React.FC<OptionProps & { expandedContent?: React.ReactNode }> = ({
     const isLoggedIn = useCFStore((state) => state.isLoggedIn);
     const isWidePanel = useCFStore((state) => state.isWidePanel);
 
-    // The user explicitly requested to only change the top and bottom padding of the Delete Saved Codes 
-    // and Change UI sections to 8px (py-2), while leaving the others untouched.
+    // - 1-col layout (!isWidePanel): Everything gets standard p-3 (12px).
+    // - 2-col layout (isWidePanel): Delete & Change UI get py-2 (8px), others get py-[15px] to uniformize height.
     let paddingClass = 'p-3';
-    if (title === 'Delete Saved Codes' || title === 'Change UI') {
-        paddingClass = 'px-3 py-2';
-    } else if (isWidePanel) {
-        paddingClass = 'px-3 py-[15px]';
+    if (isWidePanel) {
+        if (title === 'Delete Saved Codes' || title === 'Change UI') {
+            paddingClass = 'px-3 py-2';
+        } else {
+            paddingClass = 'px-3 py-[15px]';
+        }
     }
 
     return (

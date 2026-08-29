@@ -107,7 +107,7 @@ const EditorSettings: React.FC<EditorSettingsProps> = ({ isOpen, onClose, theme 
                                                 </h4>
                                             </div>
                                         </div>
-                                        <div className='w-full h-44'>
+                                        <div className='w-full h-44 ml-[1px]'>
                                             <CodeEditor
                                                 monacoInstanceRef={monacoInstanceRef}
                                                 language={language}

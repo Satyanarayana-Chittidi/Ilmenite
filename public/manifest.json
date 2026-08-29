@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "version": "1.2.5",
   "name": "Ilmenite",
-  "description": "Provides dark theme and code runner for Codeforces",
+  "description": "Advanced in-browser Monaco IDE, custom testcases, snippets, autocomplete, cloud sync, and customizable dark theme for Codeforces",
   "author": "Chittidi Satyanarayana",
   "short_name": "Ilmenite",
   "action": {
