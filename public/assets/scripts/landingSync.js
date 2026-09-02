@@ -51,5 +51,13 @@ if (typeof chrome !== 'undefined' && chrome.storage) {
                 supabaseAvatar: null
             });
         }
+
+        if (event.data && (event.data.type === 'PAYMENT_SUCCESS' || event.data.type === 'CHECK_TIER')) {
+            chrome.runtime.sendMessage({ type: 'VERIFY_AND_ACTIVATE_TIER' }, (response) => {
+                if (response) {
+                    window.postMessage({ type: 'TIER_VERIFICATION_RESULT', success: response.success, isPlusUser: response.isPlusUser }, '*');
+                }
+            });
+        }
     });
 }

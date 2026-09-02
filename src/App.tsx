@@ -7,6 +7,7 @@ import { useCFStore } from './zustand/useCFStore';
 import { getCloudCodeCount } from './utils/services/cloudCodeService';
 import { Code2 } from 'lucide-react';
 import DowngradePopup from './components/global/popups/DowngradePopup';
+import { toast } from 'sonner';
 
 const App = () => {
     const [showOptions, setShowOptions] = useState<boolean>(false);
@@ -48,6 +49,15 @@ const App = () => {
             }
             if (areaName === "local" && changes.isPlusUser !== undefined) {
                 useCFStore.getState().setIsPlusUser(changes.isPlusUser.newValue);
+                if (changes.isPlusUser.newValue === true) {
+                    toast.success("Ilmenite Plus Activated!");
+                    getCloudCodeCount().then(count => {
+                        useCFStore.getState().setCloudCodeCount(count);
+                    }).catch(err => console.error("Failed to fetch cloud code count", err));
+                    import('./utils/services/cloudCodeService').then(module => {
+                        module.syncSettingsFromCloud();
+                    });
+                }
             }
             if (areaName === "local" && changes.isLoggedIn !== undefined) {
                 useCFStore.getState().setIsLoggedIn(changes.isLoggedIn.newValue);

@@ -78,7 +78,69 @@ globalThis.browserAPI.runtime.onMessage.addListener((request, sender, sendRespon
         sendResponse({ success: true });
         return true;
     }
+
+    if (request.type === 'VERIFY_AND_ACTIVATE_TIER' || request.type === 'PAYMENT_SUCCESS') {
+        verifyAndActivateTier(sendResponse);
+        return true;
+    }
 });
+
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+
+const verifyAndActivateTier = async (sendResponse) => {
+    browserAPI.storage.local.get(['session'], async (res) => {
+        const session = res.session;
+        if (!session || !session.user || !session.access_token) {
+            sendResponse({ success: false, error: 'No active session' });
+            return;
+        }
+
+        try {
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${session.user.id}&select=tier,avatar_url`, {
+                headers: {
+                    'apikey': SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${session.access_token}`
+                }
+            });
+
+            if (response.ok) {
+                const profiles = await response.json();
+                const profile = profiles && profiles[0];
+                const isPlus = profile ? profile.tier === 'plus' : false;
+
+                browserAPI.storage.local.set({ 
+                    isPlusUser: isPlus,
+                    supabaseAvatar: profile?.avatar_url || null
+                });
+
+                // Notify all open tabs about the tier change
+                browserAPI.tabs.query({}, (tabs) => {
+                    for (let tab of tabs) {
+                        browserAPI.tabs.sendMessage(tab.id, { type: 'TOGGLE_PLUS_USER', isPlusUser: isPlus });
+                    }
+                });
+
+                sendResponse({ success: true, isPlusUser: isPlus });
+                return;
+            } else {
+                sendResponse({ success: false, error: 'Failed to fetch profile' });
+            }
+        } catch (err) {
+            console.error("Failed to verify tier from background:", err);
+            sendResponse({ success: false, error: err.message });
+        }
+    });
+};
+
+if (browserAPI.runtime.onMessageExternal) {
+    browserAPI.runtime.onMessageExternal.addListener((request, sender, sendResponse) => {
+        if (request.type === 'VERIFY_AND_ACTIVATE_TIER' || request.type === 'PAYMENT_SUCCESS' || request.type === 'CHECK_TIER') {
+            verifyAndActivateTier(sendResponse);
+            return true;
+        }
+    });
+}
 
 
 
