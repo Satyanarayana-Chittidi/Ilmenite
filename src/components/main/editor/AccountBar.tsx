@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { useCFStore } from '../../../zustand/useCFStore';
-import { LogOut, Camera, ChevronDown } from 'lucide-react';
+import { LogOut, Camera, ChevronDown, RefreshCw } from 'lucide-react';
 import { browserAPI } from '../../../utils/browser/browserDetect';
 import { supabaseClient } from '../../../utils/supabaseClient';
 import Option from '../../options/ui/Option';
@@ -26,7 +26,31 @@ const AccountBar: React.FC<AccountBarProps> = () => {
     const [showLogoutPopup, setShowLogoutPopup] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [isCheckingTier, setIsCheckingTier] = useState(false);
+    const [refreshCooldown, setRefreshCooldown] = useState(0);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        const lastCheck = parseInt(localStorage.getItem('lastTierRefreshClick') || '0', 10);
+        const elapsed = Math.floor((Date.now() - lastCheck) / 1000);
+        if (elapsed < 60) {
+            setRefreshCooldown(60 - elapsed);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (refreshCooldown <= 0) return;
+        const timer = setInterval(() => {
+            setRefreshCooldown(prev => {
+                if (prev <= 1) {
+                    clearInterval(timer);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+        return () => clearInterval(timer);
+    }, [refreshCooldown]);
 
     const handleLogout = async () => {
         setShowLogoutPopup(true);
@@ -182,6 +206,43 @@ const AccountBar: React.FC<AccountBarProps> = () => {
         </div>
     );
 
+    const handleRefreshTier = async () => {
+        if (refreshCooldown > 0) {
+            toast.info(`Please wait ${refreshCooldown}s before checking subscription status again.`);
+            return;
+        }
+        if (!session?.user?.id) {
+            toast.error("You must be logged in to check subscription status.");
+            return;
+        }
+
+        setIsCheckingTier(true);
+        localStorage.setItem('lastTierRefreshClick', Date.now().toString());
+        setRefreshCooldown(60);
+
+        try {
+            const { data, error } = await supabaseClient
+                .from('profiles')
+                .select('tier')
+                .eq('id', session.user.id)
+                .single();
+
+            if (error) throw error;
+
+            if (data?.tier === 'plus') {
+                setIsPlusUser(true);
+                browserAPI.storage.local.set({ isPlusUser: true });
+                toast.success("Ilmenite Plus Activated!");
+            } else {
+                toast.info("Your subscription tier is Free.");
+            }
+        } catch (err: any) {
+            toast.error("Failed to check subscription: " + (err.message || 'Unknown error'));
+        } finally {
+            setIsCheckingTier(false);
+        }
+    };
+
     return (
         <div className="col-span-full w-full">
             <Option 
@@ -192,23 +253,37 @@ const AccountBar: React.FC<AccountBarProps> = () => {
                             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                 {isPlusUser ? 'You are using Ilmenite Plus' : 'You are using free tier of Ilmenite'}
                             </span>
-                            <button
-                                onClick={() => {
-                                    setShowDropdown(false);
-                                    if (isPlusUser) {
-                                        setShowCancelPopup(true);
-                                    } else {
-                                        window.open('https://ilmenite.vercel.app/', '_blank');
-                                    }
-                                }}
-                                className={`text-[12px] font-bold px-4 py-2 rounded-lg flex-shrink-0 transition-colors shadow-sm ${
-                                    isPlusUser 
-                                    ? 'bg-white/50 dark:bg-[#2a2a2a]/50 border border-black/5 dark:border-white/10 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 transition-all duration-200' 
-                                    : 'bg-white/50 dark:bg-[#2a2a2a]/50 border border-black/5 dark:border-white/10 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-all duration-200'
-                                }`}
-                            >
-                                {isPlusUser ? 'Cancel Subscription' : 'Upgrade'}
-                            </button>
+                            <div className="flex items-center gap-2">
+                                {!isPlusUser && (
+                                    <button
+                                        onClick={handleRefreshTier}
+                                        disabled={isCheckingTier || refreshCooldown > 0}
+                                        className={`p-2 rounded-lg bg-white/50 dark:bg-[#2a2a2a]/50 border border-black/5 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center ${
+                                            (isCheckingTier || refreshCooldown > 0) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                                        }`}
+                                        title={refreshCooldown > 0 ? `Refresh available in ${refreshCooldown}s` : "Refresh Subscription Status"}
+                                    >
+                                        <RefreshCw size={14} className={isCheckingTier ? "animate-spin text-blue-500" : ""} />
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => {
+                                        setShowDropdown(false);
+                                        if (isPlusUser) {
+                                            setShowCancelPopup(true);
+                                        } else {
+                                            window.open('https://ilmenite.vercel.app/', '_blank');
+                                        }
+                                    }}
+                                    className={`text-[12px] font-bold px-4 py-2 rounded-lg flex-shrink-0 transition-colors shadow-sm ${
+                                        isPlusUser 
+                                        ? 'bg-white/50 dark:bg-[#2a2a2a]/50 border border-black/5 dark:border-white/10 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 transition-all duration-200' 
+                                        : 'bg-white/50 dark:bg-[#2a2a2a]/50 border border-black/5 dark:border-white/10 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-all duration-200'
+                                    }`}
+                                >
+                                    {isPlusUser ? 'Cancel Subscription' : 'Upgrade'}
+                                </button>
+                            </div>
                         </div>
                     ) : null
                 }
