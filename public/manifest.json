@@ -29,14 +29,6 @@
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self';"
   },
-  "externally_connectable": {
-    "matches": [
-      "https://ilmenite.vercel.app/*",
-      "https://ilmenite.app/*",
-      "https://*.ilmenite.app/*",
-      "http://localhost:*/*"
-    ]
-  },
   "background": {
     "service_worker": "assets/scripts/serviceWorker.js"
   },

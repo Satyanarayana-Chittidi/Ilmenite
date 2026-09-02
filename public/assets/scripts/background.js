@@ -78,33 +78,7 @@ globalThis.browserAPI.runtime.onMessage.addListener((request, sender, sendRespon
         sendResponse({ success: true });
         return true;
     }
-
-    if (request.type === 'PAYMENT_SUCCESS' || request.type === 'VERIFY_AND_ACTIVATE_TIER') {
-        browserAPI.storage.local.set({ isPlusUser: true });
-        browserAPI.tabs.query({}, (tabs) => {
-            for (let tab of tabs) {
-                browserAPI.tabs.sendMessage(tab.id, { type: 'TOGGLE_PLUS_USER', isPlusUser: true });
-            }
-        });
-        sendResponse({ success: true, isPlusUser: true });
-        return true;
-    }
 });
-
-if (browserAPI.runtime.onMessageExternal) {
-    browserAPI.runtime.onMessageExternal.addListener((request, sender, sendResponse) => {
-        if (request.type === 'PAYMENT_SUCCESS' || request.type === 'VERIFY_AND_ACTIVATE_TIER') {
-            browserAPI.storage.local.set({ isPlusUser: true });
-            browserAPI.tabs.query({}, (tabs) => {
-                for (let tab of tabs) {
-                    browserAPI.tabs.sendMessage(tab.id, { type: 'TOGGLE_PLUS_USER', isPlusUser: true });
-                }
-            });
-            sendResponse({ success: true, isPlusUser: true });
-            return true;
-        }
-    });
-}
 
 
 
