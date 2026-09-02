@@ -121,6 +121,13 @@ const AccountBar: React.FC<AccountBarProps> = () => {
         setShowDropdown(!showDropdown);
     };
 
+    const displayName = 
+        session?.user?.user_metadata?.full_name || 
+        session?.user?.user_metadata?.name || 
+        session?.user?.user_metadata?.user_name || 
+        session?.user?.user_metadata?.preferred_username || 
+        (email ? email.split('@')[0] : 'Guest');
+
     const accountTitle = (
         <div className="flex items-center gap-3">
             <div 
@@ -139,7 +146,7 @@ const AccountBar: React.FC<AccountBarProps> = () => {
                     <img src={supabaseAvatar} alt="Avatar" className={`w-10 h-10 rounded-full border-2 ${isUploading ? 'border-transparent' : 'border-gray-300 dark:border-gray-700'} object-cover group-hover:opacity-75 transition-opacity`} />
                 ) : (
                     <div className={`w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center text-lg font-bold border-2 ${isUploading ? 'border-transparent' : 'border-transparent'} group-hover:opacity-75 transition-opacity`}>
-                        {email ? email.charAt(0).toUpperCase() : '?'}
+                        {displayName ? displayName.charAt(0).toUpperCase() : '?'}
                     </div>
                 )}
                 
@@ -165,7 +172,7 @@ const AccountBar: React.FC<AccountBarProps> = () => {
             </div>
             <div className="flex flex-col">
                 <span className="text-base font-medium dark:text-zinc-200 text-zinc-800">
-                    {email ? email.split('@')[0] : 'Guest'}
+                    {displayName}
                 </span>
                 <span className="text-xs text-zinc-500 dark:text-zinc-400 font-normal" title={email || 'Account'}>
                     {email || 'Account'}
