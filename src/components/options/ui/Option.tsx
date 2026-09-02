@@ -8,10 +8,24 @@ import { useCFStore } from "../../../zustand/useCFStore";
 const Option: React.FC<OptionProps & { expandedContent?: React.ReactNode }> = ({ title, children, expandedContent }) => {
     const totalSavedCodes = getCodeMap().size;
     const cloudCodes = useCFStore((state) => state.cloudCodeCount);
+    const isPlusUser = useCFStore((state) => state.isPlusUser);
+    const isLoggedIn = useCFStore((state) => state.isLoggedIn);
+    const isWidePanel = useCFStore((state) => state.isWidePanel);
+
+    // - 1-col layout (!isWidePanel): Everything gets standard p-3 (12px).
+    // - 2-col layout (isWidePanel): Delete gets py-2 (8px) due to 2 lines of text, others (including Change UI) get py-[15px] to uniformize height.
+    let paddingClass = 'p-3';
+    if (isWidePanel) {
+        if (title === 'Delete Saved Codes') {
+            paddingClass = 'px-3 py-2';
+        } else {
+            paddingClass = 'px-3 py-[15px]';
+        }
+    }
 
     return (
-        <div className="w-full h-full flex flex-col justify-center p-3.5 dark:bg-[#1a1a1a]/60 bg-white/60 backdrop-blur-md rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 border border-black/5 dark:border-white/10">
-            <div className="flex justify-between items-center w-full my-auto">
+        <div className={`w-full flex flex-col justify-center ${paddingClass} dark:bg-[#1a1a1a]/60 bg-white/60 backdrop-blur-md rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 border border-black/5 dark:border-white/10`}>
+            <div className="flex justify-between items-center w-full">
                 <div className="flex-1 flex flex-col justify-center">
                     <span className="text-base md:text-lg font-medium dark:text-zinc-200 text-zinc-800 leading-tight">{title}</span>
                     {title === 'Delete Saved Codes' && (
