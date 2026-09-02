@@ -26,7 +26,7 @@ const App = () => {
         const handleResize = () => {
             setIsCollapsed(window.innerWidth <= 45);
             if (window === window.parent) {
-                const isWide = window.innerWidth > 600 || window.innerWidth > window.screen.width * 0.5;
+                const isWide = window.innerWidth > window.screen.width * 0.6;
                 if (useCFStore.getState().isWidePanel !== isWide) {
                     useCFStore.getState().setIsWidePanel(isWide);
                 }
@@ -103,7 +103,7 @@ const App = () => {
             }
             if (event.data?.type === 'CF_WINDOW_METRICS') {
                 const { panelWidth, windowWidth } = event.data.payload;
-                const isWide = panelWidth > windowWidth * 0.5;
+                const isWide = panelWidth > windowWidth * 0.6;
                 if (useCFStore.getState().isWidePanel !== isWide) {
                     useCFStore.getState().setIsWidePanel(isWide);
                 }
