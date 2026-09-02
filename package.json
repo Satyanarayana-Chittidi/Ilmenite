@@ -1,7 +1,7 @@
 {
     "name": "ilmenite",
     "private": true,
-    "version": "1.2.5",
+    "version": "1.2.6",
     "description": "Provides in-browser Monaco IDE, custom testcases, snippets, autocomplete, cloud sync, and customizable dark theme for Codeforces",
     "type": "module",
     "scripts": {
