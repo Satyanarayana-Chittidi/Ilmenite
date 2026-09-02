@@ -13,6 +13,8 @@ import * as monaco from 'monaco-editor';
 import { browserAPI } from "../../utils/browser/browserDetect";
 import { defaultThemeSettings } from "../../utils/themeUtils";
 import { Save, RotateCcw } from "lucide-react";
+import PremiumLockIcon from "../global/icons/PremiumLockIcon";
+import UpgradePopup from "../global/popups/UpgradePopup";
 // import ApiSettings from "../global/ApiSettings";
 
 const Settings: React.FC<SettingsProps> = ({ setShowOptions, theme, setTheme }) => {
@@ -20,8 +22,11 @@ const Settings: React.FC<SettingsProps> = ({ setShowOptions, theme, setTheme }) 
     const monacoInstanceRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
     const [changeUI, setChangeUI] = useState(localStorage.getItem('changeUI') || 'true');
     const [openConfirmationPopup, setOpenConfirmationPopup] = useState<boolean>(false);
+    const [showUpgradePopup, setShowUpgradePopup] = useState<boolean>(false);
+    const [upgradeFeatureName, setUpgradeFeatureName] = useState<string>('');
     const language = useCFStore(state => state.language);
     const fontSize = useCFStore(state => state.fontSize);
+    const isPlusUser = useCFStore(state => state.isPlusUser);
 
 
     useEffect(() => {
@@ -82,16 +87,22 @@ const Settings: React.FC<SettingsProps> = ({ setShowOptions, theme, setTheme }) 
                             <div className="flex items-center gap-2">
                                 <button 
                                     onClick={() => {
+                                        if (!isPlusUser) {
+                                            setUpgradeFeatureName("Cloud Template Sync");
+                                            setShowUpgradePopup(true);
+                                            return;
+                                        }
                                         handleRefreshTemplate(monacoInstanceRef.current);
                                     }} 
                                     aria-label="Fetch cloud template" 
-                                    title="Fetch latest template from cloud"
+                                    title={isPlusUser ? "Fetch latest template from cloud" : "Cloud template sync is a Plus feature"}
                                     className={`group relative h-1/2 text-blue-500 text-sm px-2.5 py-1 font-bold rounded-lg gap-1 mt-1 bg-gray-200 dark:bg-[#2a2a2a] hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all duration-200 flex justify-center items-center shadow-sm`}
                                 >
                                     <div className={`flex items-center gap-1.5`}>
                                         <RotateCcw color="#3b82f6" size={15} />
                                         Refresh
                                     </div>
+                                    {!isPlusUser && <PremiumLockIcon size={12} className="absolute -top-1 -right-1 text-amber-500" />}
                                 </button>
                                 <button 
                                     onClick={() => {
@@ -120,6 +131,7 @@ const Settings: React.FC<SettingsProps> = ({ setShowOptions, theme, setTheme }) 
                     <Footer />
                 </div>
             </div>
+            <UpgradePopup isOpen={showUpgradePopup} onClose={() => setShowUpgradePopup(false)} featureName={upgradeFeatureName || "Cloud Template Sync"} />
         </>
     );
 };

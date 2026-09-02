@@ -1,4 +1,4 @@
-import { Braces, ChartNoAxesGantt, CloudUpload, Code2, LoaderCircle, Play, RotateCcw, Settings, Wifi, WifiOff, X, Check, Timer as TimerIcon } from 'lucide-react';
+import { Braces, ChartNoAxesGantt, CloudUpload, Code2, LoaderCircle, Play, RotateCcw, Settings, Wifi, WifiOff, X, Check, Save, Timer as TimerIcon } from 'lucide-react';
 import PremiumSelect, { SelectOption } from '../../global/PremiumSelect';
 import { ShortcutSettings, TopBarProps } from '../../../types/types';
 import React, { useEffect, useState, useRef } from 'react';
@@ -6,6 +6,8 @@ import { useCFStore } from '../../../zustand/useCFStore';
 import { normalizeShortcut } from '../../../utils/helper';
 import Timer from './CodeTimer';
 import { browserAPI } from '../../../utils/browser/browserDetect';
+import PremiumLockIcon from '../../global/icons/PremiumLockIcon';
+import UpgradePopup from '../../global/popups/UpgradePopup';
 
 const TopBar: React.FC<TopBarProps> = ({
     theme,
@@ -34,6 +36,9 @@ const TopBar: React.FC<TopBarProps> = ({
     const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const cloudSaveStatus = useCFStore(state => state.cloudSaveStatus);
+    const isPlusUser = useCFStore(state => state.isPlusUser);
+    const [showUpgradePopup, setShowUpgradePopup] = useState<boolean>(false);
+    const [upgradeFeatureName, setUpgradeFeatureName] = useState<string>('');
     const liveContestTime = useCFStore(state => state.liveContestTime);
     const isLiveContest = useCFStore(state => state.isLiveContest);
     const setLiveContestTime = useCFStore(state => state.setLiveContestTime);
@@ -415,21 +420,36 @@ const TopBar: React.FC<TopBarProps> = ({
                             ]}
                         />
 
-                        {/* Cloud Save Status Indicator */}
-                        {cloudSaveStatus !== 'idle' && (
-                            <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 shrink-0">
-                                {cloudSaveStatus === 'saving' ? (
-                                    <>
-                                        <LoaderCircle size={14} className="animate-spin text-blue-500" />
-                                        <span className="font-medium animate-pulse">Saving to cloud...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Check size={14} className="text-green-500" />
-                                        <span className="text-green-500 font-medium">Saved to cloud</span>
-                                    </>
-                                )}
-                            </div>
+                        {/* Cloud Save Status Indicator (Plus) / Locked Save Button (Free) */}
+                        {!isPlusUser ? (
+                            <button
+                                onClick={() => {
+                                    setUpgradeFeatureName("Cloud Code Sync");
+                                    setShowUpgradePopup(true);
+                                }}
+                                title="Cloud saving is a Plus feature"
+                                aria-label="Cloud saving"
+                                className="relative shrink-0 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-all h-7 w-7 rounded-full flex items-center justify-center cursor-pointer group"
+                            >
+                                <Save color={theme === 'light' ? '#111111' : '#ffffff'} size={14} />
+                                <PremiumLockIcon size={11} className="absolute -top-1 -right-1 text-amber-500" />
+                            </button>
+                        ) : (
+                            cloudSaveStatus !== 'idle' && (
+                                <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 shrink-0">
+                                    {cloudSaveStatus === 'saving' ? (
+                                        <>
+                                            <LoaderCircle size={14} className="animate-spin text-blue-500" />
+                                            <span className="font-medium animate-pulse">Saving to cloud...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Check size={14} className="text-green-500" />
+                                            <span className="text-green-500 font-medium">Saved to cloud</span>
+                                        </>
+                                    )}
+                                </div>
+                            )
                         )}
                     </div>
 
@@ -477,6 +497,7 @@ const TopBar: React.FC<TopBarProps> = ({
                     </div>
                 </div>
             </div>
+            <UpgradePopup isOpen={showUpgradePopup} onClose={() => setShowUpgradePopup(false)} featureName={upgradeFeatureName || "Cloud Code Sync"} />
         </>
     )
 }

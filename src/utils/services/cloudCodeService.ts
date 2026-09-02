@@ -60,6 +60,16 @@ const getAuthenticatedSession = async () => {
     return sessionPromise;
 };
 
+export const handleDowngrade = () => {
+    if (useCFStore.getState().isPlusUser) {
+        useCFStore.getState().setIsPlusUser(false);
+        browserAPI.storage.local.set({ isPlusUser: false });
+        toast.error("Your subscription tier could not be verified. You have been downgraded to Free.", {
+            duration: 5000,
+        });
+    }
+};
+
 /**
  * Fetches the compressed code from Supabase and decompresses it.
  * @param slug The problem slug (file_name)
@@ -75,18 +85,32 @@ export const fetchCloudCode = async (slug: string): Promise<string | null> => {
 
         const { data, error } = await supabase
             .from('files')
-            .select('content')
+            .select('content, profiles(tier)')
             .eq('user_id', session.user.id)
             .eq('file_name', slug)
             .maybeSingle();
 
         if (error) {
-            if (error.code !== 'PGRST116') {
+            if (error.message && error.message.includes('row-level security policy')) {
+                handleDowngrade();
+            } else if (error.code !== 'PGRST116') {
                 console.error("Fetch error:", error);
             }
             return null;
         }
         if (!data) return null;
+
+        // Verify tier from database against local store state
+        const profileTier = (data as any)?.profiles?.tier;
+        if (profileTier) {
+            if (profileTier !== 'plus' && useCFStore.getState().isPlusUser) {
+                handleDowngrade();
+                return null;
+            } else if (profileTier === 'plus' && !useCFStore.getState().isPlusUser) {
+                useCFStore.getState().setIsPlusUser(true);
+                browserAPI.storage.local.set({ isPlusUser: true });
+            }
+        }
 
         // Return raw compressed payload for direct local storage write
         if (data.content) {
@@ -94,8 +118,11 @@ export const fetchCloudCode = async (slug: string): Promise<string | null> => {
             toast.success("Loaded code from cloud!", { duration: 2000 });
         }
         return data.content || null;
-    } catch (err) {
+    } catch (err: any) {
         console.error("Failed to fetch from cloud", err);
+        if (err.message && err.message.includes('row-level security policy')) {
+            handleDowngrade();
+        }
         return null;
     }
 };
@@ -115,10 +142,18 @@ export const getCloudCodeCount = async (): Promise<number> => {
             .eq('user_id', session.user.id)
             .neq('file_name', 'user_template'); // Exclude template from count
 
-        if (error) return 0;
+        if (error) {
+            if (error.message && error.message.includes('row-level security policy')) {
+                handleDowngrade();
+            }
+            return 0;
+        }
         return count || 0;
-    } catch (err) {
+    } catch (err: any) {
         console.error("Failed to get cloud code count", err);
+        if (err.message && err.message.includes('row-level security policy')) {
+            handleDowngrade();
+        }
         return 0;
     }
 };
@@ -138,8 +173,11 @@ export const deleteAllCloudCodes = async (): Promise<boolean> => {
 
         if (error) throw error;
         return true;
-    } catch (err) {
+    } catch (err: any) {
         console.error("Failed to delete all cloud codes", err);
+        if (err.message && err.message.includes('row-level security policy')) {
+            handleDowngrade();
+        }
         return false;
     }
 };
@@ -152,16 +190,35 @@ export const saveCloudTemplate = async (templateCode: string): Promise<boolean> 
         const session = await getAuthenticatedSession();
         if (!session?.user) return false;
 
-        const { error } = await supabase.from('files').upsert({
+        const { data, error } = await supabase.from('files').upsert({
             user_id: session.user.id,
             file_name: 'user_template',
             content: templateCode,
-        }, { onConflict: 'user_id, file_name' });
+        }, { onConflict: 'user_id, file_name' })
+        .select('id, profiles(tier)')
+        .single();
 
         if (error) throw error;
+
+        // Verify tier from database against local store state
+        const profileTier = (data as any)?.profiles?.tier;
+        if (profileTier) {
+            if (profileTier !== 'plus' && useCFStore.getState().isPlusUser) {
+                handleDowngrade();
+                return false;
+            } else if (profileTier === 'plus' && !useCFStore.getState().isPlusUser) {
+                useCFStore.getState().setIsPlusUser(true);
+                browserAPI.storage.local.set({ isPlusUser: true });
+            }
+        }
+
+        toast.success("Successfully saved template to cloud!", { duration: 2000 });
         return true;
-    } catch (err) {
+    } catch (err: any) {
         console.error("Failed to save template to cloud", err);
+        if (err.message && err.message.includes('row-level security policy')) {
+            handleDowngrade();
+        }
         return false;
     }
 };
@@ -178,6 +235,10 @@ export const fetchCloudTemplate = async (): Promise<string | null> => {
  */
 export const saveCloudCode = async (slug: string, code: string): Promise<boolean> => {
     try {
+        if (lastSyncedCloudCode.get(slug) === code) {
+            return true;
+        }
+
         const session = await getAuthenticatedSession();
         if (!session?.user) return false;
 
@@ -186,10 +247,22 @@ export const saveCloudCode = async (slug: string, code: string): Promise<boolean
             file_name: slug,
             content: code,
         }, { onConflict: 'user_id, file_name' })
-        .select('id')
+        .select('id, profiles(tier)')
         .single();
 
         if (error) throw error;
+
+        // Verify tier from database against local store state
+        const profileTier = (data as any)?.profiles?.tier;
+        if (profileTier) {
+            if (profileTier !== 'plus' && useCFStore.getState().isPlusUser) {
+                handleDowngrade();
+                return false;
+            } else if (profileTier === 'plus' && !useCFStore.getState().isPlusUser) {
+                useCFStore.getState().setIsPlusUser(true);
+                browserAPI.storage.local.set({ isPlusUser: true });
+            }
+        }
 
         lastSyncedCloudCode.set(slug, code);
         console.log(`[Cloud Code] Successfully saved code for slug: ${slug}`);
@@ -197,7 +270,7 @@ export const saveCloudCode = async (slug: string, code: string): Promise<boolean
     } catch (err: any) {
         console.error("Failed to save cloud code", err);
         if (err.message && err.message.includes('row-level security policy')) {
-            console.error("RLS policy failed.");
+            handleDowngrade();
         } else {
             toast.error("Cloud Save Failed: " + (err.message || JSON.stringify(err)));
         }
@@ -225,11 +298,25 @@ export const syncSettingsGroupToCloud = async () => {
         const session = await getAuthenticatedSession();
         if (!session) return false;
         
-        const { error } = await supabase.from('profiles').update({ settings }).eq('id', session.user.id);
+        const { data: resData, error } = await supabase.from('profiles').update({ settings }).eq('id', session.user.id).select('tier').single();
         if (error) throw error;
+        
+        if (resData?.tier !== 'plus' && useCFStore.getState().isPlusUser) {
+            handleDowngrade();
+            return false;
+        } else if (resData?.tier === 'plus' && !useCFStore.getState().isPlusUser) {
+            useCFStore.getState().setIsPlusUser(true);
+            browserAPI.storage.local.set({ isPlusUser: true });
+        }
+
         console.log(`[Settings] Synced settings group to cloud`);
-    } catch (e) {
+        return true;
+    } catch (e: any) {
         console.error("Failed to sync settings to cloud", e);
+        if (e.message && e.message.includes('row-level security policy')) {
+            handleDowngrade();
+        }
+        return false;
     }
 };
 
@@ -244,11 +331,25 @@ export const syncSnippetsToCloud = async () => {
         const session = await getAuthenticatedSession();
         if (!session) return false;
         
-        const { error } = await supabase.from('profiles').update({ snippets }).eq('id', session.user.id);
+        const { data: resData, error } = await supabase.from('profiles').update({ snippets }).eq('id', session.user.id).select('tier').single();
         if (error) throw error;
+        
+        if (resData?.tier !== 'plus' && useCFStore.getState().isPlusUser) {
+            handleDowngrade();
+            return false;
+        } else if (resData?.tier === 'plus' && !useCFStore.getState().isPlusUser) {
+            useCFStore.getState().setIsPlusUser(true);
+            browserAPI.storage.local.set({ isPlusUser: true });
+        }
+
         console.log(`[Settings] Synced snippets to cloud`);
-    } catch (e) {
+        return true;
+    } catch (e: any) {
         console.error("Failed to sync snippets to cloud", e);
+        if (e.message && e.message.includes('row-level security policy')) {
+            handleDowngrade();
+        }
+        return false;
     }
 };
 
@@ -266,14 +367,27 @@ export const fetchSettingsFromCloud = async () => {
     try {
         const { data, error } = await supabase
             .from('profiles')
-            .select('settings, snippets')
+            .select('settings, snippets, tier')
             .eq('id', session.user.id)
             .maybeSingle();
 
         if (error && error.code !== 'PGRST116') throw error;
+        
+        if (data) {
+            if (data.tier !== 'plus' && useCFStore.getState().isPlusUser) {
+                handleDowngrade();
+                return null;
+            } else if (data.tier === 'plus' && !useCFStore.getState().isPlusUser) {
+                useCFStore.getState().setIsPlusUser(true);
+                browserAPI.storage.local.set({ isPlusUser: true });
+            }
+        }
         return data;
     } catch (err: any) {
         console.error("Failed to fetch settings from cloud", err);
+        if (err.message && err.message.includes('row-level security policy')) {
+            handleDowngrade();
+        }
         return null;
     }
 };
