@@ -64,9 +64,7 @@ export const handleDowngrade = () => {
     if (useCFStore.getState().isPlusUser) {
         useCFStore.getState().setIsPlusUser(false);
         browserAPI.storage.local.set({ isPlusUser: false });
-        toast.error("Your subscription tier could not be verified. You have been downgraded to Free.", {
-            duration: 5000,
-        });
+        useCFStore.getState().setShowDowngradePopup(true);
     }
 };
 

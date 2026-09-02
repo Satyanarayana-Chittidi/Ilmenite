@@ -58,6 +58,10 @@ interface CFStoreInterface {
     setLiveContestTime: (time: string | null) => void;
     isLiveContest: boolean;
     setIsLiveContest: (isLive: boolean) => void;
+
+    // Downgrade Popup State
+    showDowngradePopup: boolean;
+    setShowDowngradePopup: (show: boolean) => void;
 }
 
 export const useCFStore = create<CFStoreInterface>((set) => ({
@@ -85,6 +89,7 @@ export const useCFStore = create<CFStoreInterface>((set) => ({
     cloudSaveStatus: 'idle',
     liveContestTime: null,
     isLiveContest: new URLSearchParams(window.location.search).get('isLive') === 'true',
+    showDowngradePopup: false,
 
     // Actions
     setLanguage: (language) => { localStorage.setItem('preferredLanguage', language); set({ language }); },
@@ -109,6 +114,6 @@ export const useCFStore = create<CFStoreInterface>((set) => ({
     setCloudCodeCount: (count) => set({ cloudCodeCount: count }),
     setCloudSaveStatus: (status) => set({ cloudSaveStatus: status }),
     setLiveContestTime: (time) => set({ liveContestTime: time }),
-    setIsLiveContest: (isLive) => set({ isLiveContest: isLive })
+    setIsLiveContest: (isLive) => set({ isLiveContest: isLive }),
+    setShowDowngradePopup: (showDowngradePopup) => set({ showDowngradePopup })
 }));
-

@@ -6,12 +6,15 @@ import { browserAPI } from './utils/browser/browserDetect';
 import { useCFStore } from './zustand/useCFStore';
 import { getCloudCodeCount } from './utils/services/cloudCodeService';
 import { Code2 } from 'lucide-react';
+import DowngradePopup from './components/global/popups/DowngradePopup';
 
 const App = () => {
     const [showOptions, setShowOptions] = useState<boolean>(false);
     const showOptionsRef = useRef(showOptions);
     const [theme, setTheme] = useState<"light" | "dark">((localStorage.getItem('theme') as "light" | "dark") || "dark");
     const [isCollapsed, setIsCollapsed] = useState<boolean>(window.innerWidth <= 45);
+    const showDowngradePopup = useCFStore(state => state.showDowngradePopup);
+    const setShowDowngradePopup = useCFStore(state => state.setShowDowngradePopup);
 
     const handleSetShowOptions = useCallback((val: boolean) => {
         showOptionsRef.current = val;
@@ -165,6 +168,11 @@ const App = () => {
                     setTheme={setTheme}
                 />
             </div>
+
+            <DowngradePopup 
+                isOpen={showDowngradePopup} 
+                onClose={() => setShowDowngradePopup(false)} 
+            />
         </div>
     );
 };
