@@ -1,18 +1,41 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import './App.css';
 import Options from './components/options/page';
 import Main from './components/main/page';
 import { browserAPI } from './utils/browser/browserDetect';
 import { useCFStore } from './zustand/useCFStore';
+import { getCloudCodeCount } from './utils/services/cloudCodeService';
+import { Code2 } from 'lucide-react';
 
 const App = () => {
     const [showOptions, setShowOptions] = useState<boolean>(false);
     const showOptionsRef = useRef(showOptions);
+    const [theme, setTheme] = useState<"light" | "dark">((localStorage.getItem('theme') as "light" | "dark") || "dark");
+    const [isCollapsed, setIsCollapsed] = useState<boolean>(window.innerWidth <= 45);
+
+    const handleSetShowOptions = useCallback((val: boolean) => {
+        showOptionsRef.current = val;
+        setShowOptions(val);
+    }, []);
+
     useEffect(() => {
         showOptionsRef.current = showOptions;
     }, [showOptions]);
 
-    const [theme, setTheme] = useState<"light" | "dark">((localStorage.getItem('theme') as "light" | "dark") || "dark");
+    useEffect(() => {
+        const handleResize = () => {
+            setIsCollapsed(window.innerWidth <= 45);
+            if (window === window.parent) {
+                const isWide = window.innerWidth > 600 || window.innerWidth > window.screen.width * 0.5;
+                if (useCFStore.getState().isWidePanel !== isWide) {
+                    useCFStore.getState().setIsWidePanel(isWide);
+                }
+            }
+        };
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         const handleStorageChange = (changes: any, areaName: string) => {
@@ -54,6 +77,12 @@ const App = () => {
             if (res.supabaseAvatar !== undefined) {
                 useCFStore.getState().setSupabaseAvatar(res.supabaseAvatar);
             }
+
+            if (res.isLoggedIn && res.isPlusUser) {
+                getCloudCodeCount().then(count => {
+                    useCFStore.getState().setCloudCodeCount(count);
+                }).catch(err => console.error("Failed to fetch cloud code count", err));
+            }
         });
 
         const handleMessage = (event: MessageEvent) => {
@@ -72,8 +101,18 @@ const App = () => {
                     useCFStore.getState().setSupabaseAvatar(event.data.supabaseAvatar);
                 }
             }
+            if (event.data?.type === 'CF_WINDOW_METRICS') {
+                const { panelWidth, windowWidth } = event.data.payload;
+                const isWide = panelWidth > windowWidth * 0.5;
+                if (useCFStore.getState().isWidePanel !== isWide) {
+                    useCFStore.getState().setIsWidePanel(isWide);
+                }
+            }
         };
         window.addEventListener('message', handleMessage);
+
+        // Request initial metrics from parent in case we missed the load event
+        window.parent.postMessage({ type: 'CF_REQUEST_METRICS' }, '*');
 
         return () => {
             browserAPI.storage.onChanged.removeListener(handleStorageChange);
@@ -81,11 +120,39 @@ const App = () => {
         };
     }, []);
 
+    if (isCollapsed) {
+        return (
+            <div className={`relative w-full h-full overflow-hidden border-l-2 dark:border-l-[1px] border-black dark:border-[#ccc] ${theme === 'dark' ? 'bg-[#1e1e1e]' : 'bg-white'}`}>
+                <button
+                    onClick={() => {
+                        window.parent.postMessage({ type: 'CF_EXPAND_PANEL' }, '*');
+                    }}
+                    className="flex items-center justify-center gap-1.5 hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-pointer rounded-md"
+                    style={{ 
+                        transform: 'rotate(90deg)',
+                        transformOrigin: 'top left',
+                        position: 'absolute',
+                        top: '0',
+                        left: '36px',
+                        width: 'max-content',
+                        height: '32px',
+                        padding: '0 12px'
+                    }}
+                >
+                    <Code2 color={theme === 'light' ? '#22c55e' : '#4ade80'} size={20} />
+                    <span className="font-bold text-gray-800 dark:text-gray-200 tracking-wide select-none">
+                        <span className="font-serif tracking-normal">I</span>lmenite
+                    </span>
+                </button>
+            </div>
+        );
+    }
+
     return (
-        <div className="relative w-full h-full overflow-hidden">
+        <div className="relative w-full h-full overflow-hidden" style={{ minWidth: '420px' }}>
             {/* Vertical Separator rendered as left border */}
             <div className={`w-full h-full border-l-2 dark:border-l-[1px] border-black dark:border-[#ccc]`}>
-                <Main showOptionsRef={showOptionsRef} setShowOptions={setShowOptions} theme={theme} />
+                <Main showOptionsRef={showOptionsRef} setShowOptions={handleSetShowOptions} theme={theme} />
             </div>
 
             <div
@@ -93,7 +160,7 @@ const App = () => {
                     } dark:bg-[#111111]`}
             >
                 <Options
-                    setShowOptions={setShowOptions}
+                    setShowOptions={handleSetShowOptions}
                     theme={theme}
                     setTheme={setTheme}
                 />

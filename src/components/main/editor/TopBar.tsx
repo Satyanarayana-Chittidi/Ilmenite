@@ -380,7 +380,7 @@ const TopBar: React.FC<TopBarProps> = ({
             </div>
 
             <div className='w-full bg-white dark:bg-[#111111] relative z-20'>
-                <div className='w-[100vw] flex items-center justify-between gap-2 py-2 px-2'>
+                <div className='w-full min-w-[420px] flex items-center justify-between gap-2 py-2 px-2'>
                     <div className='flex items-center gap-2 shrink-0'>
                         {/* Language Selector */}
                         <PremiumSelect
@@ -429,7 +429,7 @@ const TopBar: React.FC<TopBarProps> = ({
                                 }}
                                 title="Cloud saving is a Plus feature"
                                 aria-label="Cloud saving"
-                                className="relative shrink-0 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-all h-7 w-7 rounded-full flex items-center justify-center cursor-pointer group"
+                                className="relative shrink-0 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-all text-sm h-7 w-7 rounded-lg flex items-center justify-center cursor-pointer group"
                             >
                                 <Save color={theme === 'light' ? '#111111' : '#ffffff'} size={14} />
                                 <PremiumLockIcon size={11} className="absolute -top-1 -right-1 text-amber-500" />
