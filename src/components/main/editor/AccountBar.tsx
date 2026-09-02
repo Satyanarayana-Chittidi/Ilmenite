@@ -8,11 +8,11 @@ import { supabaseClient } from '../../../utils/supabaseClient';
 import Option from '../../options/ui/Option';
 
 interface AccountBarProps {
-    setShowUpgradePopup: (val: boolean) => void;
-    setUpgradeFeatureName: (val: string) => void;
+    setShowUpgradePopup?: (val: boolean) => void;
+    setUpgradeFeatureName?: (val: string) => void;
 }
 
-const AccountBar: React.FC<AccountBarProps> = ({ setShowUpgradePopup, setUpgradeFeatureName }) => {
+const AccountBar: React.FC<AccountBarProps> = () => {
     const isPlusUser = useCFStore(state => state.isPlusUser);
     const setIsPlusUser = useCFStore(state => state.setIsPlusUser);
     const isLoggedIn = useCFStore(state => state.isLoggedIn);
@@ -190,8 +190,7 @@ const AccountBar: React.FC<AccountBarProps> = ({ setShowUpgradePopup, setUpgrade
                                     if (isPlusUser) {
                                         setShowCancelPopup(true);
                                     } else {
-                                        setUpgradeFeatureName("Ilmenite Premium");
-                                        setShowUpgradePopup(true);
+                                        window.open('https://ilmenite.vercel.app/', '_blank');
                                     }
                                 }}
                                 className={`text-[12px] font-bold px-4 py-2 rounded-lg flex-shrink-0 transition-colors shadow-sm ${
