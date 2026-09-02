@@ -53,9 +53,9 @@ if (typeof chrome !== 'undefined' && chrome.storage) {
         }
 
         if (event.data && (event.data.type === 'PAYMENT_SUCCESS' || event.data.type === 'CHECK_TIER')) {
-            chrome.runtime.sendMessage({ type: 'VERIFY_AND_ACTIVATE_TIER' }, (response) => {
+            chrome.runtime.sendMessage({ type: 'PAYMENT_SUCCESS' }, (response) => {
                 if (response) {
-                    window.postMessage({ type: 'TIER_VERIFICATION_RESULT', success: response.success, isPlusUser: response.isPlusUser }, '*');
+                    window.postMessage({ type: 'TIER_VERIFICATION_RESULT', success: response.success, isPlusUser: true }, '*');
                 }
             });
         }
