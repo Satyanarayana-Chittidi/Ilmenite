@@ -1,6 +1,6 @@
 import {toast} from "sonner";
 import * as monaco from 'monaco-editor';
-import { saveCloudTemplate, fetchCloudTemplate } from './services/cloudCodeService';
+import { fetchCloudTemplate } from './services/cloudCodeService';
 import { useCFStore } from '../zustand/useCFStore';
 import LZString from 'lz-string';
 
@@ -14,7 +14,7 @@ export const deleteCodesFromLocalStorage = () => {
     }
 };
 
-export const handleSaveTemplate = async (editor: monaco.editor.IStandaloneCodeEditor | null) => {
+export const handleSaveTemplate = (editor: monaco.editor.IStandaloneCodeEditor | null) => {
     if (!editor) {
         toast.error("Editor not found!");
         return;
@@ -22,19 +22,7 @@ export const handleSaveTemplate = async (editor: monaco.editor.IStandaloneCodeEd
     const editorValue = editor.getValue();
     const compressedTemplate = LZString.compressToUTF16(editorValue);
     localStorage.setItem("template", compressedTemplate);
-    
-    const isPlusUser = useCFStore.getState().isPlusUser;
-    const isLoggedIn = useCFStore.getState().isLoggedIn;
-    if (isPlusUser && isLoggedIn) {
-        const success = await saveCloudTemplate(compressedTemplate);
-        if (success) {
-            toast.success("Template saved & synced to cloud!");
-        } else {
-            toast.warning("Template saved locally, but cloud sync failed.");
-        }
-    } else {
-        toast.success("Template saved!");
-    }
+    toast.success("Template saved!");
 };
 
 export const handleRefreshTemplate = async (editor: monaco.editor.IStandaloneCodeEditor | null) => {

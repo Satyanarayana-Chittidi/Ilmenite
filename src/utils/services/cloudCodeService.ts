@@ -133,6 +133,9 @@ export const fetchCloudCode = async (slug: string): Promise<string | null> => {
  */
 export const getCloudCodeCount = async (): Promise<number> => {
     try {
+        const store = useCFStore.getState();
+        if (!store.isLoggedIn || !store.isPlusUser) return 0;
+
         const session = await getAuthenticatedSession();
         if (!session?.user) return 0;
 
@@ -163,6 +166,9 @@ export const getCloudCodeCount = async (): Promise<number> => {
  */
 export const deleteAllCloudCodes = async (): Promise<boolean> => {
     try {
+        const store = useCFStore.getState();
+        if (!store.isLoggedIn || !store.isPlusUser) return false;
+
         const session = await getAuthenticatedSession();
         if (!session?.user) return false;
 
@@ -187,6 +193,9 @@ export const deleteAllCloudCodes = async (): Promise<boolean> => {
  */
 export const saveCloudTemplate = async (templateCode: string): Promise<boolean> => {
     try {
+        const store = useCFStore.getState();
+        if (!store.isLoggedIn || !store.isPlusUser) return false;
+
         const session = await getAuthenticatedSession();
         if (!session?.user) return false;
 
@@ -235,6 +244,9 @@ export const fetchCloudTemplate = async (): Promise<string | null> => {
  */
 export const saveCloudCode = async (slug: string, code: string): Promise<boolean> => {
     try {
+        const store = useCFStore.getState();
+        if (!store.isLoggedIn || !store.isPlusUser) return false;
+
         if (lastSyncedCloudCode.get(slug) === code) {
             return true;
         }
