@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Code, Settings, Palette, Eye } from 'lucide-react';
 import PremiumSelect from '../../global/PremiumSelect';
@@ -18,6 +19,7 @@ interface EditorSettingsProps {
 }
 
 const EditorSettings: React.FC<EditorSettingsProps> = ({ isOpen, onClose, theme }) => {
+    const [mounted, setMounted] = useState(false);
     const monacoInstanceRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
     const editorThemeList = useCFStore(state => state.editorThemeList);
@@ -28,41 +30,76 @@ const EditorSettings: React.FC<EditorSettingsProps> = ({ isOpen, onClose, theme 
     const fontSize = useCFStore(state => state.fontSize);
 
     useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    useEffect(() => {
         if (isOpen) {
-            setEditorSettings(getEditorSettings());
+            const stored = getEditorSettings();
+            if (JSON.stringify(stored) !== JSON.stringify(editorSettings)) {
+                setEditorSettings(stored);
+            }
         }
     }, [isOpen]);
 
     const isInitialMount = useRef(true);
+    const lastSavedSettingsRef = useRef<string>(JSON.stringify(editorSettings));
+
     useEffect(() => {
         if (isInitialMount.current) {
             isInitialMount.current = false;
-        } else {
+            return;
+        }
+        const currentJson = JSON.stringify(editorSettings);
+        if (currentJson !== lastSavedSettingsRef.current) {
+            lastSavedSettingsRef.current = currentJson;
             saveEditorSettings();
         }
     }, [editorSettings]);
 
-    return (
-        <>
-            <AnimatePresence>
-                {isOpen && (
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                syncAllSettingsToCloud();
+                onClose();
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+        const originalOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+
+        return () => {
+            document.removeEventListener("keydown", handleKeyDown);
+            document.body.style.overflow = originalOverflow || "auto";
+        };
+    }, [isOpen, onClose]);
+
+    if (!mounted) return null;
+
+    return createPortal(
+        <AnimatePresence>
+            {isOpen && (
                 <motion.div
-                    className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99999] flex items-center justify-center p-4"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
+                    transition={{ duration: 0.2 }}
+                    onClick={() => {
+                        syncAllSettingsToCloud();
+                        onClose();
+                    }}
                 >
                     <motion.div
                         className="bg-white dark:bg-[#1a1a1a] rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
-                        initial={{ scale: 0.9, y: 20, opacity: 0 }}
+                        initial={{ scale: 0.95, y: 10, opacity: 0 }}
                         animate={{ scale: 1, y: 0, opacity: 1 }}
-                        exit={{ scale: 0.9, y: 20, opacity: 0 }}
-                        transition={{
-                            type: "spring",
-                            damping: 25,
-                            stiffness: 300
-                        }}
+                        exit={{ scale: 0.95, y: 10, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}
                         <div className="sticky top-0 bg-white dark:bg-[#1a1a1a] z-10 px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
@@ -358,8 +395,8 @@ const EditorSettings: React.FC<EditorSettingsProps> = ({ isOpen, onClose, theme 
                     </motion.div>
                 </motion.div>
             )}
-            </AnimatePresence>
-        </>
+        </AnimatePresence>,
+        document.body
     );
 };
 

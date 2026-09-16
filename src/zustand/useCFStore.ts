@@ -64,10 +64,20 @@ interface CFStoreInterface {
     setShowDowngradePopup: (show: boolean) => void;
 }
 
+const safeJsonParse = <T>(key: string, fallback: T): T => {
+    try {
+        const item = localStorage.getItem(key);
+        if (!item || item === 'undefined' || item === 'null') return fallback;
+        return JSON.parse(item);
+    } catch {
+        return fallback;
+    }
+};
+
 export const useCFStore = create<CFStoreInterface>((set) => ({
     // Initial State
     language: localStorage.getItem('preferredLanguage') || 'cpp',
-    fontSize: parseInt(localStorage.getItem('preferredFontSize') || '16', 10),
+    fontSize: parseInt(localStorage.getItem('preferredFontSize') || '16', 10) || 16,
     currentUrl: null,
     currentSlug: null,
     totalSize: 0,
@@ -76,14 +86,14 @@ export const useCFStore = create<CFStoreInterface>((set) => ({
     isSubmitting: false,
     apiKey: localStorage.getItem('judge0CEApiKey') || '',
     editorThemeList: themesJSON,
-    editorSettings: { ...DEFAULT_EDITOR_SETTINGS, ...(JSON.parse(localStorage.getItem('editorSettings') ?? 'null') || {}) },
-    shortcutSettings: { ...DEFAULT_SHORTCUT_SETTINGS, ...(JSON.parse(localStorage.getItem('shortcutSettings') ?? 'null') || {}) },
-    customSnippets: JSON.parse(localStorage.getItem('customSnippets') ?? 'null') ?? {},
+    editorSettings: { ...DEFAULT_EDITOR_SETTINGS, ...safeJsonParse('editorSettings', {}) },
+    shortcutSettings: { ...DEFAULT_SHORTCUT_SETTINGS, ...safeJsonParse('shortcutSettings', {}) },
+    customSnippets: safeJsonParse('customSnippets', {}),
     isWidePanel: false,
     isPlusUser: localStorage.getItem('isPlusUser') === 'true', // load from local storage
     isLoggedIn: localStorage.getItem('isLoggedIn') === 'true', // Default to false unless explicitly true
     email: localStorage.getItem('email') || null,
-    session: JSON.parse(localStorage.getItem('session') || 'null'),
+    session: safeJsonParse('session', null),
     supabaseAvatar: localStorage.getItem('supabaseAvatar') || null,
     cloudCodeCount: null,
     cloudSaveStatus: 'idle',

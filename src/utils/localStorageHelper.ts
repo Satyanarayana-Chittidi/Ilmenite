@@ -1,6 +1,6 @@
-import {toast} from "sonner";
+import { toast } from "sonner";
 import * as monaco from 'monaco-editor';
-import { fetchCloudTemplate } from './services/cloudCodeService';
+import { fetchCloudTemplate, saveCloudTemplate } from './services/cloudCodeService';
 import { useCFStore } from '../zustand/useCFStore';
 import LZString from 'lz-string';
 
@@ -14,7 +14,7 @@ export const deleteCodesFromLocalStorage = () => {
     }
 };
 
-export const handleSaveTemplate = (editor: monaco.editor.IStandaloneCodeEditor | null) => {
+export const handleSaveTemplate = async (editor: monaco.editor.IStandaloneCodeEditor | null) => {
     if (!editor) {
         toast.error("Editor not found!");
         return;
@@ -22,7 +22,19 @@ export const handleSaveTemplate = (editor: monaco.editor.IStandaloneCodeEditor |
     const editorValue = editor.getValue();
     const compressedTemplate = LZString.compressToUTF16(editorValue);
     localStorage.setItem("template", compressedTemplate);
-    toast.success("Template saved!");
+
+    const store = useCFStore.getState();
+    if (store.isLoggedIn && store.isPlusUser) {
+        try {
+            await saveCloudTemplate(compressedTemplate);
+        } catch (e) {
+            console.error("Failed to sync template to cloud:", e);
+            toast.success("Template saved locally!");
+            return;
+        }
+    } else {
+        toast.success("Template saved!");
+    }
 };
 
 export const handleRefreshTemplate = async (editor: monaco.editor.IStandaloneCodeEditor | null) => {
@@ -42,13 +54,14 @@ export const handleRefreshTemplate = async (editor: monaco.editor.IStandaloneCod
         const cloudTemplate = await fetchCloudTemplate();
         if (cloudTemplate) {
             localStorage.setItem("template", cloudTemplate);
-            const decompressed = LZString.decompressFromUTF16(cloudTemplate) || '';
+            const decompressed = LZString.decompressFromUTF16(cloudTemplate) || cloudTemplate;
             editor.setValue(decompressed);
             toast.success("Template refreshed from cloud!");
         } else {
             toast.info("No template found in cloud.");
         }
     } catch (error) {
+        console.error("Failed to fetch template from cloud:", error);
         toast.error("Failed to fetch template from cloud.");
     }
 };

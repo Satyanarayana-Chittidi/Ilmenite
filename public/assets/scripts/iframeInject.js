@@ -37,8 +37,12 @@
     `;
 	document.documentElement.appendChild(themeStyle);
 
+	let currentSupabaseAvatar = null;
+	let updateAvatarDisplayFn = null;
+
 	browserAPI.storage.local.get(["sidePanelWidth", "theme", "supabaseAvatar"]).then((result) => {
 		isDark = result.theme !== "light";
+		currentSupabaseAvatar = result.supabaseAvatar || null;
 
 		const btnContainer = document.createElement("div");
 		btnContainer.id = "ilmenite-floating-btns";
@@ -123,13 +127,21 @@
 		themeBtn.addEventListener("click", () => {
 			isDark = !isDark;
 			updateBtnStyles();
+			if (updateAvatarDisplayFn) updateAvatarDisplayFn();
 			browserAPI.storage.local.set({ theme: isDark ? "dark" : "light" });
 		});
 
 		browserAPI.storage.onChanged.addListener((changes, areaName) => {
-			if (areaName === "local" && changes.theme) {
-				isDark = changes.theme.newValue === "dark";
-				updateBtnStyles();
+			if (areaName === "local") {
+				if (changes.theme) {
+					isDark = changes.theme.newValue === "dark";
+					updateBtnStyles();
+					if (updateAvatarDisplayFn) updateAvatarDisplayFn();
+				}
+				if (changes.supabaseAvatar !== undefined) {
+					currentSupabaseAvatar = changes.supabaseAvatar.newValue || null;
+					if (updateAvatarDisplayFn) updateAvatarDisplayFn();
+				}
 			}
 		});
 
@@ -373,23 +385,116 @@
 						profileHeader.style.alignItems = 'center';
 						profileHeader.style.gap = '8px';
 
-						// Create circular image
+						// Avatar container to prevent broken image icon and support fallbacks
+						const avatarContainer = document.createElement('div');
+						avatarContainer.style.width = '30px';
+						avatarContainer.style.height = '30px';
+						avatarContainer.style.borderRadius = '50%';
+						avatarContainer.style.display = 'flex';
+						avatarContainer.style.alignItems = 'center';
+						avatarContainer.style.justifyContent = 'center';
+						avatarContainer.style.flexShrink = '0';
+						avatarContainer.style.overflow = 'hidden';
+						avatarContainer.style.userSelect = 'none';
+
+						const updateAvatarContainerStyles = () => {
+							avatarContainer.style.border = isDark ? '1px solid #444' : '1px solid #d1d5db';
+							avatarContainer.style.backgroundColor = isDark ? '#2a2a2a' : '#e5e7eb';
+							avatarContainer.style.color = isDark ? '#ffffff' : '#374151';
+						};
+						updateAvatarContainerStyles();
+
+						// Create circular image element
 						const img = document.createElement('img');
-						img.style.width = '30px';
-						img.style.height = '30px';
+						img.style.width = '100%';
+						img.style.height = '100%';
 						img.style.borderRadius = '50%';
 						img.style.objectFit = 'cover';
-						img.style.border = '1px solid #ddd'; // clean single circle
-						
-						// Fetch avatar
-						fetch(`https://codeforces.com/api/user.info?handles=${handle}`)
-							.then(res => res.json())
+						img.style.display = 'none'; // Hidden until loaded
+
+						// Create initials fallback div
+						const initialsFallback = document.createElement('div');
+						initialsFallback.textContent = handle ? handle.charAt(0).toUpperCase() : '?';
+						initialsFallback.style.display = 'flex';
+						initialsFallback.style.alignItems = 'center';
+						initialsFallback.style.justifyContent = 'center';
+						initialsFallback.style.width = '100%';
+						initialsFallback.style.height = '100%';
+						initialsFallback.style.fontSize = '13px';
+						initialsFallback.style.fontWeight = 'bold';
+
+						avatarContainer.appendChild(img);
+						avatarContainer.appendChild(initialsFallback);
+
+						let isCfAvatarActive = false;
+
+						const showAccountFallback = () => {
+							if (currentSupabaseAvatar) {
+								img.onload = () => {
+									img.style.display = 'block';
+									initialsFallback.style.display = 'none';
+								};
+								img.onerror = () => {
+									img.style.display = 'none';
+									initialsFallback.style.display = 'flex';
+								};
+								img.src = currentSupabaseAvatar;
+							} else {
+								img.style.display = 'none';
+								initialsFallback.style.display = 'flex';
+							}
+						};
+
+						const showCfAvatar = (url) => {
+							const cleanUrl = url.startsWith('//') ? 'https:' + url : url;
+							img.onload = () => {
+								isCfAvatarActive = true;
+								img.style.display = 'block';
+								initialsFallback.style.display = 'none';
+							};
+							img.onerror = () => {
+								console.warn('[Ilmenite] CF avatar image failed to load, falling back to account bar avatar.');
+								isCfAvatarActive = false;
+								showAccountFallback();
+							};
+							img.src = cleanUrl;
+						};
+
+						updateAvatarDisplayFn = () => {
+							updateAvatarContainerStyles();
+							if (!isCfAvatarActive) {
+								showAccountFallback();
+							}
+						};
+
+						// Start with account fallback while waiting for CF API
+						showAccountFallback();
+
+						// Fetch CF avatar
+						fetch(`https://codeforces.com/api/user.info?handles=${encodeURIComponent(handle)}`)
+							.then(res => {
+								if (!res.ok) throw new Error('CF API response status: ' + res.status);
+								return res.json();
+							})
 							.then(data => {
-								if (data.status === 'OK' && data.result.length > 0) {
-									img.src = data.result[0].avatar;
+								if (data.status === 'OK' && Array.isArray(data.result) && data.result.length > 0) {
+									const user = data.result[0];
+									const cfAvatar = user.avatar || user.titlePhoto;
+									if (cfAvatar && !cfAvatar.includes('no-avatar.jpg') && !cfAvatar.includes('no-title.jpg')) {
+										showCfAvatar(cfAvatar);
+										return;
+									}
+								}
+								if (!isCfAvatarActive) {
+									showAccountFallback();
 								}
 							})
-							.catch(e => console.error(e));
+							.catch(e => {
+								console.warn('[Ilmenite] Could not load CF profile avatar:', e);
+								if (!isCfAvatarActive) {
+									showAccountFallback();
+								}
+							});
 							
 						// Create clean handle text
 						handleText = document.createElement('span'); 
@@ -398,7 +503,7 @@
 						handleText.style.setProperty('color', '#000000', 'important'); // Overridden in inject-styles for dark mode if needed
 						handleText.style.setProperty('font-weight', 'normal', 'important');
 						
-						profileHeader.appendChild(img);
+						profileHeader.appendChild(avatarContainer);
 						profileHeader.appendChild(handleText);
 						
 						// Dropdown container

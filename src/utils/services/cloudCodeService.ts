@@ -73,7 +73,7 @@ export const handleDowngrade = () => {
  * @param slug The problem slug (file_name)
  * @returns The decompressed code string, or null if not found.
  */
-export const fetchCloudCode = async (slug: string): Promise<string | null> => {
+export const fetchCloudCode = async (slug: string, showToast: boolean = true): Promise<string | null> => {
     try {
         const store = useCFStore.getState();
         if (!store.isLoggedIn || !store.isPlusUser) return null;
@@ -113,7 +113,9 @@ export const fetchCloudCode = async (slug: string): Promise<string | null> => {
         // Return raw compressed payload for direct local storage write
         if (data.content) {
             lastSyncedCloudCode.set(slug, data.content);
-            toast.success("Loaded code from cloud!", { duration: 2000 });
+            if (showToast && slug !== 'user_template') {
+                toast.success("Loaded code from cloud!", { duration: 2000 });
+            }
         }
         return data.content || null;
     } catch (err: any) {
@@ -234,7 +236,7 @@ export const saveCloudTemplate = async (templateCode: string): Promise<boolean> 
  * Fetches the user's default template from the cloud.
  */
 export const fetchCloudTemplate = async (): Promise<string | null> => {
-    return fetchCloudCode('user_template');
+    return fetchCloudCode('user_template', false);
 };
 
 /**

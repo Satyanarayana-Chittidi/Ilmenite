@@ -1,5 +1,6 @@
 import { CodeEntry, TestCaseArray } from '../../types/types';
 import { getCodeMap, getSlugQueue, getTestCaseMap, getTestCaseQueue } from '../helper';
+import { Queue } from '../Queue';
 import { MAX_PROBLEM_IO_SIZE, SINGLE_CODE_LIMIT_BYTES, STORAGE_LIMIT_BYTES } from '../../data/constants';
 import * as monaco from 'monaco-editor';
 import { useCFStore } from '../../zustand/useCFStore';
@@ -117,39 +118,50 @@ export const saveTestCaseForSlug = async (slug: string, testCasesToSave: TestCas
 };
 
 export const initializeStorage = () => {
-    const storedQueue = getCodeMap();
-    let size = 0;
-    const now = Date.now();
-    const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1000;
-    const toDelete: string[] = [];
+    try {
+        const storedQueue = getCodeMap();
+        let size = 0;
+        const now = Date.now();
+        const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1000;
+        const toDelete: string[] = [];
 
-    // Check expiration for free tier items
-    storedQueue.forEach((entry, slug) => {
-        if (entry.timestamp && now - entry.timestamp > FORTY_EIGHT_HOURS) {
-            toDelete.push(slug);
-        } else {
-            size += entry.size;
-        }
-    });
-
-    if (toDelete.length > 0) {
-        const slugQueue = getSlugQueue();
-        let queueItems: string[] = [];
-        try {
-            queueItems = JSON.parse(slugQueue.toJSON());
-        } catch(e) {}
-        
-        toDelete.forEach(slug => {
-            storedQueue.delete(slug);
-            queueItems = queueItems.filter(s => s !== slug);
+        // Check expiration for free tier items
+        storedQueue.forEach((entry, slug) => {
+            if (entry.timestamp && now - entry.timestamp > FORTY_EIGHT_HOURS) {
+                toDelete.push(slug);
+            } else {
+                size += entry.size || 0;
+            }
         });
-        
-        const newSlugQueue = Queue.fromJSON<string>(queueItems);
-        localStorage.setItem('codeMap', JSON.stringify(Array.from(storedQueue.entries())));
-        localStorage.setItem('slugQueue', newSlugQueue.toJSON());
-    }
 
-    return size;
+        if (toDelete.length > 0) {
+            const slugQueue = getSlugQueue();
+            let queueItems: string[] = [];
+            try {
+                queueItems = JSON.parse(slugQueue.toJSON());
+            } catch (e) {
+                console.error("Failed to parse slugQueue JSON:", e);
+            }
+            
+            toDelete.forEach(slug => {
+                storedQueue.delete(slug);
+                queueItems = queueItems.filter(s => s !== slug);
+            });
+            
+            const newSlugQueue = Queue.fromJSON<string>(queueItems);
+            try {
+                localStorage.setItem('codeMap', JSON.stringify(Array.from(storedQueue.entries())));
+                localStorage.setItem('slugQueue', newSlugQueue.toJSON());
+            } catch (storageErr) {
+                console.error("Failed to update localStorage during storage cleanup:", storageErr);
+            }
+        }
+
+        return size;
+    } catch (err) {
+        console.error("Error during initializeStorage:", err);
+        return 0;
+    }
 };
 
 export const syncCurrentCodeToCloud = async (slug: string) => {

@@ -5,9 +5,13 @@ import { DEFAULT_SHORTCUT_SETTINGS } from '../../data/constants';
 
 export const useShortcutSettings = (settings: ShortcutSettings, setSettings: (settings: ShortcutSettings) => void) => {
     const getShortcutSettings = (): ShortcutSettings => {
-        const storedSettings = localStorage.getItem('shortcutSettings');
-        if (storedSettings) {
-            return JSON.parse(storedSettings);
+        try {
+            const storedSettings = localStorage.getItem('shortcutSettings');
+            if (storedSettings) {
+                return { ...DEFAULT_SHORTCUT_SETTINGS, ...JSON.parse(storedSettings) };
+            }
+        } catch {
+            console.error('Failed to parse shortcut settings');
         }
         return DEFAULT_SHORTCUT_SETTINGS;
     };

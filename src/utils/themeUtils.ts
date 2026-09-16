@@ -16,8 +16,12 @@ export const defaultThemeSettings: ThemeSettings = {
 };
 
 export const getThemeSettings = (): ThemeSettings => {
-    const savedSettings = localStorage.getItem('themeCustomSettings');
-    return savedSettings ? JSON.parse(savedSettings) : defaultThemeSettings;
+    try {
+        const savedSettings = localStorage.getItem('themeCustomSettings');
+        return savedSettings ? JSON.parse(savedSettings) : defaultThemeSettings;
+    } catch {
+        return defaultThemeSettings;
+    }
 };
 
 export const saveThemeSettings = (settings: ThemeSettings): void => {

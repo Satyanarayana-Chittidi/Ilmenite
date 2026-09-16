@@ -7,7 +7,7 @@ import { useCFStore } from './zustand/useCFStore';
 import { getCloudCodeCount } from './utils/services/cloudCodeService';
 import { Code2 } from 'lucide-react';
 import DowngradePopup from './components/global/popups/DowngradePopup';
-import { toast } from 'sonner';
+import { toast, Toaster } from 'sonner';
 
 const App = () => {
     const [showOptions, setShowOptions] = useState<boolean>(false);
@@ -182,6 +182,13 @@ const App = () => {
             <DowngradePopup 
                 isOpen={showDowngradePopup} 
                 onClose={() => setShowDowngradePopup(false)} 
+            />
+
+            <Toaster 
+                position="bottom-right" 
+                theme={theme === 'light' ? 'light' : 'dark'} 
+                richColors 
+                closeButton
             />
         </div>
     );

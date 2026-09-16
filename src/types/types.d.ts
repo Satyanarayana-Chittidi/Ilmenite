@@ -41,7 +41,7 @@ export interface CodeEditorProps {
 }
 
 export type PopupBoxProps = {
-    isOpen: boolean;
+    isOpen?: boolean;
     setIsOpen: Dispatch<SetStateAction<boolean>> | ((value: boolean) => void);
     title?: string;
     children: React.ReactNode;

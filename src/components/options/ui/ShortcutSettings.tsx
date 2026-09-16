@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Zap } from 'lucide-react';
 import { useCFStore } from '../../../zustand/useCFStore';
@@ -15,6 +16,7 @@ interface ShortcutSettingsProps {
 }
 
 const ShortcutSettingsComponent: React.FC<ShortcutSettingsProps> = ({ isOpen, onClose }) => {
+    const [mounted, setMounted] = useState(false);
     const storeShortcutSettings = useCFStore<ShortcutSettings>(state => state.shortcutSettings);
     const setStoreShortcutSettings = useCFStore(state => state.setShortcutSettings);
     const [localShortcutSettings, setLocalShortcutSettings] = useState<ShortcutSettings>(storeShortcutSettings);
@@ -50,10 +52,33 @@ const ShortcutSettingsComponent: React.FC<ShortcutSettingsProps> = ({ isOpen, on
     ];
 
     useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    useEffect(() => {
         if(isOpen) {
             setLocalShortcutSettings(getShortcutSettings());
         }
     }, [isOpen]);
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === "Escape" && !recordingFor) {
+                onClose();
+            }
+        };
+
+        document.addEventListener("keydown", handleEscape);
+        const originalOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+
+        return () => {
+            document.removeEventListener("keydown", handleEscape);
+            document.body.style.overflow = originalOverflow || "auto";
+        };
+    }, [isOpen, recordingFor, onClose]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -130,26 +155,28 @@ const ShortcutSettingsComponent: React.FC<ShortcutSettingsProps> = ({ isOpen, on
         setRecordingFor(id);
     }, []);
 
-    return (
+    if (!mounted) return null;
+
+    return createPortal(
         <AnimatePresence>
             {isOpen && (
                 <motion.div
-                    className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99999] flex items-center justify-center p-4"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
+                    transition={{ duration: 0.2 }}
+                    onClick={() => {
+                        if (!recordingFor) onClose();
+                    }}
                 >
                     <motion.div
                         className="bg-white dark:bg-[#1a1a1a] rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col"
-                        initial={{ scale: 0.9, y: 20, opacity: 0 }}
+                        initial={{ scale: 0.95, y: 10, opacity: 0 }}
                         animate={{ scale: 1, y: 0, opacity: 1 }}
-                        exit={{ scale: 0.9, y: 20, opacity: 0 }}
-                        transition={{
-                            type: "spring",
-                            damping: 25,
-                            stiffness: 300
-                        }}
+                        exit={{ scale: 0.95, y: 10, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        onClick={(e) => e.stopPropagation()}
                     >
                         <div className="sticky top-0 bg-white dark:bg-[#1a1a1a] z-10 px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
                             <h2 className="text-xl font-bold dark:text-white text-black flex items-center gap-2">
@@ -179,7 +206,7 @@ const ShortcutSettingsComponent: React.FC<ShortcutSettingsProps> = ({ isOpen, on
                                         value={
                                             recordingFor === row.id
                                             ? "Press keys..."
-                                            : normalizeShortcut(localShortcutSettings[row.id])
+                                             : normalizeShortcut(localShortcutSettings[row.id])
                                         }
                                         isRecording={recordingFor === row.id}
                                         onStartRecording={startRecording}
@@ -211,7 +238,8 @@ const ShortcutSettingsComponent: React.FC<ShortcutSettingsProps> = ({ isOpen, on
                     </motion.div>
                 </motion.div>
             )}
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
     );
 };
 

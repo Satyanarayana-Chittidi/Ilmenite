@@ -18,6 +18,25 @@ const UpgradePopup: React.FC<UpgradePopupProps> = ({ isOpen, onClose, featureNam
         setMounted(true);
     }, []);
 
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                onClose();
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+        const originalOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+
+        return () => {
+            document.removeEventListener("keydown", handleKeyDown);
+            document.body.style.overflow = originalOverflow || "auto";
+        };
+    }, [isOpen, onClose]);
+
     if (!mounted) return null;
 
     return createPortal(

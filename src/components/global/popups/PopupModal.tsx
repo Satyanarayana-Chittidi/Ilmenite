@@ -19,6 +19,11 @@ const PopupModal = ({
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !disableOutsideClick) {
         setIsOpen(false);
@@ -26,12 +31,14 @@ const PopupModal = ({
     };
 
     document.addEventListener("keydown", handleKeyDown);
+    const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "auto";
+      document.body.style.overflow = originalOverflow || "auto";
     };
-  }, [setIsOpen]);
+  }, [isOpen, disableOutsideClick, setIsOpen]);
 
   if (!mounted) return null;
 
@@ -42,7 +49,8 @@ const PopupModal = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className={`fixed z-[99999] flex items-center justify-center w-screen min-h-screen top-0 left-0 bg-dark-900 bg-opacity-40 bg-clip-padding backdrop-filter backdrop-blur-sm py-4`}
+          transition={{ duration: 0.2 }}
+          className="fixed z-[99999] inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           onClick={handleClickOutside}
         >
           <div className="flex items-center justify-center w-fit">

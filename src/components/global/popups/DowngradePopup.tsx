@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldAlert, X } from 'lucide-react';
@@ -14,6 +14,25 @@ const DowngradePopup: React.FC<DowngradePopupProps> = ({ isOpen, onClose }) => {
     useEffect(() => {
         setMounted(true);
     }, []);
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                onClose();
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+        const originalOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+
+        return () => {
+            document.removeEventListener("keydown", handleKeyDown);
+            document.body.style.overflow = originalOverflow || "auto";
+        };
+    }, [isOpen, onClose]);
 
     if (!mounted) return null;
 
