@@ -54,8 +54,62 @@ const Main: React.FC<MainProps> = ({ showOptionsRef, setShowOptions, theme }) =>
     const pressedKeysRef = useRef<Set<string>>(new Set());
 
     useEffect(() => {
-        // We no longer open a login tab automatically since login is native.
-    }, [isLoggedIn]);
+        if (isLoggedIn && isPlusUser && currentSlug) {
+            const refreshCurrentProblem = async () => {
+                let codeForUrl = getCodeMap().get(currentSlug)?.code || '';
+                if (!codeForUrl) {
+                    const cloudCode = await fetchCloudCode(currentSlug);
+                    if (cloudCode) {
+                        codeForUrl = cloudCode;
+                        const currentMap = getCodeMap();
+                        const slugQueue = getSlugQueue();
+                        if (!currentMap.has(currentSlug)) {
+                            slugQueue.add(currentSlug);
+                        }
+                        currentMap.set(currentSlug, { code: cloudCode, size: cloudCode.length, timestamp: Date.now() });
+                        try {
+                            localStorage.setItem('codeMap', JSON.stringify(Array.from(currentMap.entries())));
+                            localStorage.setItem('slugQueue', slugQueue.toJSON());
+                        } catch (e) {
+                            console.error("Local storage quota exceeded", e);
+                        }
+                    }
+                }
+
+                if (!codeForUrl) {
+                    const compressedTemplate = localStorage.getItem('template') || '';
+                    codeForUrl = compressedTemplate;
+                }
+
+                if (codeForUrl) {
+                    codeForUrl = LZString.decompressFromUTF16(codeForUrl) || codeForUrl;
+                }
+
+                if (monacoInstanceRef.current) {
+                    loadCodeWithCursor(monacoInstanceRef.current, codeForUrl, true);
+                }
+            };
+
+            refreshCurrentProblem();
+        }
+    }, [isLoggedIn, isPlusUser, currentSlug]);
+
+    useEffect(() => {
+        const handleStorageChange = (changes: any, areaName: string) => {
+            if (areaName === "local" && changes.template) {
+                const currentMap = getCodeMap();
+                if (currentSlug && !currentMap.get(currentSlug)?.code && monacoInstanceRef.current) {
+                    const newTemplateCompressed = changes.template.newValue || '';
+                    const decompressed = LZString.decompressFromUTF16(newTemplateCompressed) || newTemplateCompressed || '';
+                    loadCodeWithCursor(monacoInstanceRef.current, decompressed, true);
+                }
+            }
+        };
+        browserAPI.storage.onChanged.addListener(handleStorageChange);
+        return () => {
+            browserAPI.storage.onChanged.removeListener(handleStorageChange);
+        };
+    }, [currentSlug]);
 
     useEffect(() => {
         setTimeout(() => {

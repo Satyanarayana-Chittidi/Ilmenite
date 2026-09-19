@@ -47,6 +47,11 @@ const App = () => {
                 setTheme(changes.theme.newValue);
                 localStorage.setItem('theme', changes.theme.newValue);
             }
+            if (areaName === "local" && changes.template) {
+                if (changes.template.newValue) {
+                    localStorage.setItem('template', changes.template.newValue);
+                }
+            }
             if (areaName === "local" && changes.isPlusUser !== undefined) {
                 useCFStore.getState().setIsPlusUser(changes.isPlusUser.newValue);
                 if (changes.isPlusUser.newValue === true) {
@@ -61,6 +66,18 @@ const App = () => {
             }
             if (areaName === "local" && changes.isLoggedIn !== undefined) {
                 useCFStore.getState().setIsLoggedIn(changes.isLoggedIn.newValue);
+                if (changes.isLoggedIn.newValue === true) {
+                    browserAPI.storage.local.get(['isPlusUser'], (res) => {
+                        if (res.isPlusUser || useCFStore.getState().isPlusUser) {
+                            getCloudCodeCount().then(count => {
+                                useCFStore.getState().setCloudCodeCount(count);
+                            }).catch(err => console.error("Failed to fetch cloud code count", err));
+                            import('./utils/services/cloudCodeService').then(module => {
+                                module.syncSettingsFromCloud();
+                            });
+                        }
+                    });
+                }
             }
             if (areaName === "local" && changes.email !== undefined) {
                 useCFStore.getState().setEmail(changes.email.newValue);
@@ -74,7 +91,7 @@ const App = () => {
         };
         browserAPI.storage.onChanged.addListener(handleStorageChange);
 
-        browserAPI.storage.local.get(['isPlusUser', 'isLoggedIn', 'email', 'session', 'supabaseAvatar'], (res) => {
+        browserAPI.storage.local.get(['isPlusUser', 'isLoggedIn', 'email', 'session', 'supabaseAvatar', 'template'], (res) => {
             if (res.isPlusUser !== undefined) {
                 useCFStore.getState().setIsPlusUser(res.isPlusUser);
             }
@@ -90,11 +107,17 @@ const App = () => {
             if (res.supabaseAvatar !== undefined) {
                 useCFStore.getState().setSupabaseAvatar(res.supabaseAvatar);
             }
+            if (res.template && !localStorage.getItem('template')) {
+                localStorage.setItem('template', res.template);
+            }
 
             if (res.isLoggedIn && res.isPlusUser) {
                 getCloudCodeCount().then(count => {
                     useCFStore.getState().setCloudCodeCount(count);
                 }).catch(err => console.error("Failed to fetch cloud code count", err));
+                import('./utils/services/cloudCodeService').then(module => {
+                    module.syncSettingsFromCloud();
+                });
             }
         });
 
@@ -112,6 +135,11 @@ const App = () => {
                 }
                 if (event.data.supabaseAvatar !== undefined) {
                     useCFStore.getState().setSupabaseAvatar(event.data.supabaseAvatar);
+                }
+                if (event.data.isLoggedIn && (event.data.isPlusUser || useCFStore.getState().isPlusUser)) {
+                    import('./utils/services/cloudCodeService').then(module => {
+                        module.syncSettingsFromCloud();
+                    });
                 }
             }
             if (event.data?.type === 'CF_WINDOW_METRICS') {

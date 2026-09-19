@@ -8,56 +8,65 @@ let sessionPromise: Promise<any> | null = null;
 const lastSyncedCloudCode = new Map<string, string>();
 
 const getAuthenticatedSession = async () => {
-    const store = useCFStore.getState();
-    if (!store.isLoggedIn || !store.isPlusUser) return null;
+    try {
+        const storageRes = await new Promise<any>((resolve) => browserAPI.storage.local.get(['session', 'isLoggedIn', 'isPlusUser'], resolve));
+        const store = useCFStore.getState();
+        const isLoggedIn = store.isLoggedIn || storageRes.isLoggedIn;
+        const isPlusUser = store.isPlusUser || storageRes.isPlusUser;
+        if (!isLoggedIn || !isPlusUser) return null;
 
-    if (sessionPromise) return sessionPromise;
-    sessionPromise = (async () => {
-        try {
-            // ALWAYS get the freshest session from Chrome Storage because other tabs/sidepanel might have refreshed it
-            const storageRes = await new Promise<any>((resolve) => browserAPI.storage.local.get(['session'], resolve));
-            const freshSession = storageRes.session;
-            
-            if (!freshSession) {
-                return null;
-            }
+        if (sessionPromise) return sessionPromise;
+        sessionPromise = (async () => {
+            try {
+                // ALWAYS get the freshest session from Chrome Storage because other tabs/sidepanel might have refreshed it
+                const freshSession = storageRes.session || store.session;
+                
+                if (!freshSession) {
+                    return null;
+                }
 
-            // Sync Zustand with the freshest storage session
-            useCFStore.getState().setSession(freshSession);
+                // Sync Zustand with the freshest storage session
+                useCFStore.getState().setSession(freshSession);
+                useCFStore.getState().setIsLoggedIn(true);
+                useCFStore.getState().setIsPlusUser(true);
 
-            const { data } = await supabase.auth.getSession();
-            
-            // If Supabase client already has this exact session, we're good
-            if (data?.session?.access_token === freshSession.access_token) {
+                const { data } = await supabase.auth.getSession();
+                
+                // If Supabase client already has this exact session, we're good
+                if (data?.session?.access_token === freshSession.access_token) {
+                    return freshSession;
+                }
+
+                // Only manually setSession if Supabase client lost it but we still have tokens
+                const { error, data: newSessionData } = await supabase.auth.setSession({
+                    access_token: freshSession.access_token,
+                    refresh_token: freshSession.refresh_token
+                });
+
+                if (error) {
+                    console.error("Failed to set Supabase session", error);
+                    return null;
+                }
+                
+                if (newSessionData?.session) {
+                    useCFStore.getState().setSession(newSessionData.session);
+                    browserAPI.storage.local.set({ session: newSessionData.session });
+                    return newSessionData.session;
+                }
+                
                 return freshSession;
-            }
-
-            // Only manually setSession if Supabase client lost it but we still have tokens
-            const { error, data: newSessionData } = await supabase.auth.setSession({
-                access_token: freshSession.access_token,
-                refresh_token: freshSession.refresh_token
-            });
-
-            if (error) {
-                console.error("Failed to set Supabase session", error);
+            } catch (err) {
+                console.error("Session error:", err);
                 return null;
+            } finally {
+                sessionPromise = null;
             }
-            
-            if (newSessionData?.session) {
-                useCFStore.getState().setSession(newSessionData.session);
-                browserAPI.storage.local.set({ session: newSessionData.session });
-                return newSessionData.session;
-            }
-            
-            return freshSession;
-        } catch (err) {
-            console.error("Session error:", err);
-            return null;
-        } finally {
-            sessionPromise = null;
-        }
-    })();
-    return sessionPromise;
+        })();
+        return sessionPromise;
+    } catch (err) {
+        console.error("getAuthenticatedSession error:", err);
+        return null;
+    }
 };
 
 export const handleDowngrade = () => {
@@ -433,10 +442,15 @@ export const syncSettingsFromCloud = async () => {
         }
 
         // Fetch user template from cloud and sync to local storage
-        if (useCFStore.getState().isLoggedIn && useCFStore.getState().isPlusUser) {
+        const storageRes = await new Promise<any>((resolve) => browserAPI.storage.local.get(['isLoggedIn', 'isPlusUser'], resolve));
+        const isLoggedIn = useCFStore.getState().isLoggedIn || storageRes.isLoggedIn;
+        const isPlusUser = useCFStore.getState().isPlusUser || storageRes.isPlusUser;
+
+        if (isLoggedIn && isPlusUser) {
             const cloudTemplate = await fetchCloudTemplate();
             if (cloudTemplate) {
                 localStorage.setItem('template', cloudTemplate);
+                browserAPI.storage.local.set({ template: cloudTemplate });
                 console.log("[Settings] Successfully fetched template from cloud");
             }
         }

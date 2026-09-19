@@ -71,21 +71,30 @@ export const AuthForm: React.FC = () => {
                             if (session) {
                                 const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', session.user?.id).single();
                                 const isPlusUser = profile ? profile.tier === 'plus' : false;
+                                const avatarUrl = profile?.avatar_url || session.user?.user_metadata?.avatar_url || null;
                                 
-                                chrome.storage.local.set({
-                                    isLoggedIn: true,
-                                    isPlusUser: isPlusUser,
-                                    session: session,
-                                    email: session.user?.email,
-                                    supabaseAvatar: profile?.avatar_url || session.user?.user_metadata?.avatar_url || null
+                                await new Promise<void>((resolve) => {
+                                    chrome.storage.local.set({
+                                        isLoggedIn: true,
+                                        isPlusUser: isPlusUser,
+                                        session: session,
+                                        email: session.user?.email,
+                                        supabaseAvatar: avatarUrl
+                                    }, () => resolve());
                                 });
 
                                 // Ensure status switch happens immediately in Zustand before fetching
                                 useCFStore.getState().setIsLoggedIn(true);
                                 useCFStore.getState().setIsPlusUser(isPlusUser);
+                                useCFStore.getState().setSession(session);
+                                useCFStore.getState().setEmail(session.user?.email || null);
+                                useCFStore.getState().setSupabaseAvatar(avatarUrl);
 
                                 if (isPlusUser) {
                                     import('../../utils/services/cloudCodeService').then(module => {
+                                        module.getCloudCodeCount().then(count => {
+                                            useCFStore.getState().setCloudCodeCount(count);
+                                        }).catch(err => console.error("Failed to fetch cloud code count", err));
                                         module.syncSettingsFromCloud();
                                     });
                                 }

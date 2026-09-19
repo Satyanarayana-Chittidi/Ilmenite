@@ -59,6 +59,22 @@ const Settings: React.FC<SettingsProps> = ({ setShowOptions, theme, setTheme }) 
         localStorage.setItem('changeUI', changeUI);
     }, [changeUI]);
 
+    useEffect(() => {
+        const handleStorageChange = (changes: any, areaName: string) => {
+            if (areaName === "local" && changes.template && monacoInstanceRef.current) {
+                const newCompressed = changes.template.newValue || '';
+                const decompressed = LZString.decompressFromUTF16(newCompressed) || newCompressed;
+                if (monacoInstanceRef.current.getValue() !== decompressed) {
+                    monacoInstanceRef.current.setValue(decompressed);
+                }
+            }
+        };
+        browserAPI.storage.onChanged.addListener(handleStorageChange);
+        return () => {
+            browserAPI.storage.onChanged.removeListener(handleStorageChange);
+        };
+    }, []);
+
     return (
         <>
             <DeleteCodesConfirmationPopup
