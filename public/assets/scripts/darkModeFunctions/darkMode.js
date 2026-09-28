@@ -14,12 +14,12 @@ const injectDarkModeCSS = () => {
                 background-color: #0f0f0f !important;
             }
                 
-            body {
+            body, #facebox, .ui-dialog {
                 filter: invert(0.94) hue-rotate(160deg) !important;
             }
 
             /* for undo filter */
-            .cf-ilmenite-no-invert, img, picture, video, iframe, canvas, .legendColorBox, #legend_unordered_list li svg, .welldone, #heatmap-tooltip, #cf-heatmap svg rect:not([fill="#ebedf0"]) {
+            .cf-ilmenite-no-invert, img, picture, video, iframe, canvas, .legendColorBox, #legend_unordered_list li svg, .welldone, #heatmap-tooltip, #cf-heatmap svg rect:not([fill="#ebedf0"]), #facebox img, .ui-dialog img {
                 filter: invert(1) hue-rotate(-160deg) !important;
             }
 
@@ -226,11 +226,11 @@ const applyCustomThemeSettings = (settings) => {
           contrast(${contrast}%) 
           sepia(${eyeComfort}%) !important;
       }
-      body {
+      body, #facebox, .ui-dialog {
         filter: invert(${invertValue}%) hue-rotate(160deg) !important;
       }
       /* Perfectly undo the body filter for images */
-      .cf-ilmenite-no-invert, img, picture, video, iframe, canvas, .legendColorBox, #legend_unordered_list li svg, .welldone, #heatmap-tooltip, #cf-heatmap svg rect:not([fill="#ebedf0"]) {
+      .cf-ilmenite-no-invert, img, picture, video, iframe, canvas, .legendColorBox, #legend_unordered_list li svg, .welldone, #heatmap-tooltip, #cf-heatmap svg rect:not([fill="#ebedf0"]), #facebox img, .ui-dialog img {
         filter: hue-rotate(-160deg) invert(100%) contrast(${Math.abs(C)}%) !important;
       }
     `;

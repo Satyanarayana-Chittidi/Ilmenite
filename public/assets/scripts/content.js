@@ -1,8 +1,21 @@
-﻿// Functions in respective folders
+// Functions in respective folders
 // changeLoginPageUI, changeProblemSetPageUI, removeLoginPageUI, removeProblemSetPageUI-> changeUIFunctions
 // injectDarkModeCSS, sortToggleImgInvert, removeSortToggleImgInvert -> darkModeFunctions
 const isFirefox = false;
 const browserAPI = chrome;
+
+const isProblemPage = /^\/(?:problemset\/problem\/|contest\/\d+\/problem\/|gym\/\d+\/problem\/|group\/[^/]+\/contest\/\d+\/problem\/|problemsets\/acmsguru\/problem\/)/.test(window.location.pathname);
+
+if (isProblemPage) {
+    document.documentElement.classList.add('cf-ilmenite-problem-page');
+    if (document.body) {
+        document.body.classList.add('cf-ilmenite-problem-page');
+    } else {
+        document.addEventListener('DOMContentLoaded', () => {
+            document.body.classList.add('cf-ilmenite-problem-page');
+        });
+    }
+}
 
 browserAPI.storage.local.get(["changeUI", "theme", "themeCustomSettings", "defaultThemeSettings", "isPlusUser"]).then((result) => {
     if (result.changeUI === "true" && result.isPlusUser) {
@@ -84,7 +97,6 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 function injectGlobalThemeToggle() {
-    const isProblemPage = /^\/(?:problemset\/problem\/|contest\/\d+\/problem\/)/.test(window.location.pathname);
     if (isProblemPage) return; // problem page already has it via iframeInject.js
 
     const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
@@ -171,4 +183,62 @@ function injectGlobalThemeToggle() {
 }
 
 injectGlobalThemeToggle();
+
+function setupModalHoisting() {
+    const modalSelectors = [
+        '#facebox',
+        '#facebox_overlay',
+        '.facebox_overlay',
+        '.ui-dialog',
+        '.ui-widget-overlay',
+        '.modal-backdrop'
+    ];
+
+    const hoistModal = (el) => {
+        if (!el || el.parentNode === document.documentElement) return;
+        document.documentElement.appendChild(el);
+        if (el.id === 'facebox_overlay' || el.classList.contains('facebox_overlay') || el.classList.contains('ui-widget-overlay') || el.classList.contains('modal-backdrop')) {
+            el.style.setProperty('z-index', '2147483645', 'important');
+            el.style.setProperty('position', 'fixed', 'important');
+            el.style.setProperty('top', '0', 'important');
+            el.style.setProperty('left', '0', 'important');
+            el.style.setProperty('width', '100vw', 'important');
+            el.style.setProperty('height', '100vh', 'important');
+        } else {
+            el.style.setProperty('z-index', '2147483646', 'important');
+        }
+    };
+
+    const runCheck = () => {
+        modalSelectors.forEach(sel => {
+            document.querySelectorAll(sel).forEach(hoistModal);
+        });
+    };
+
+    runCheck();
+
+    const observer = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+            for (const node of mutation.addedNodes) {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    modalSelectors.forEach(sel => {
+                        if (node.matches && node.matches(sel)) {
+                            hoistModal(node);
+                        } else if (node.querySelectorAll) {
+                            node.querySelectorAll(sel).forEach(hoistModal);
+                        }
+                    });
+                }
+            }
+        }
+    });
+
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', runCheck);
+    }
+}
+
+setupModalHoisting();
 

@@ -207,71 +207,71 @@ body.cf-ilmenite-custom-scrollbars *::-webkit-scrollbar-corner {
     background-color: transparent !important;
 }
 
-body:has(.problem-statement) #sidebar {
+body.cf-ilmenite-problem-page #sidebar {
     display: none !important;
 }
 
 /* Allow Codeforces to actually shrink instead of clipping under the sidepanel */
-body:has(.problem-statement),
-body:has(.problem-statement) div#body,
-body:has(.problem-statement) #pageContent,
-body:has(.problem-statement) .menu-box,
-body:has(.problem-statement) #header,
-body:has(.problem-statement) #footer {
+body.cf-ilmenite-problem-page,
+body.cf-ilmenite-problem-page div#body,
+body.cf-ilmenite-problem-page #pageContent,
+body.cf-ilmenite-problem-page .menu-box,
+body.cf-ilmenite-problem-page #header,
+body.cf-ilmenite-problem-page #footer {
     min-width: 0 !important;
 }
 
 /* ONLY when the panel is open, stretch the layout perfectly to fill the remaining space */
-body.cf-ilmenite-panel-open:has(.problem-statement) div#body {
+body.cf-ilmenite-panel-open.cf-ilmenite-problem-page div#body {
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
     box-sizing: border-box !important;
 }
 
-body:has(.problem-statement) div#body {
+body.cf-ilmenite-problem-page div#body {
     padding: 10px 1em 0 1em !important;
 }
 
 /* Ensure wide elements in the problem statement don't trigger horizontal scrollbars */
-body.cf-ilmenite-panel-open:has(.problem-statement) .problem-statement {
+body.cf-ilmenite-panel-open.cf-ilmenite-problem-page .problem-statement {
     overflow-x: hidden !important; 
     word-break: break-word !important;
 }
-  body.cf-ilmenite-panel-open:has(.problem-statement) .problem-statement pre,
-  body.cf-ilmenite-panel-open:has(.problem-statement) .problem-statement .MathJax_Display {
-      overflow-x: auto !important;
-      overflow-y: hidden !important;
-      max-width: 100% !important;
-  }
+body.cf-ilmenite-panel-open.cf-ilmenite-problem-page .problem-statement pre,
+body.cf-ilmenite-panel-open.cf-ilmenite-problem-page .problem-statement .MathJax_Display {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    max-width: 100% !important;
+}
   
-  /* Add tiny padding to prevent math from clipping when overflow-y is hidden */
-  .MathJax_Display {
-      padding-top: 2px !important;
-      padding-bottom: 2px !important;
-  }
+/* Add tiny padding to prevent math from clipping when overflow-y is hidden */
+.MathJax_Display {
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+}
 
 /* Allow the primary header bar to expand its height when items wrap on narrow screens */
-body:has(.problem-statement) .menu-box {
+body.cf-ilmenite-problem-page .menu-box {
     height: auto !important;
     width: fit-content !important;
     overflow: hidden !important;
     flex-shrink: 0 !important;
 }
-body:has(.problem-statement) .menu-list-container,
-body:has(.problem-statement) .menu-list {
+body.cf-ilmenite-problem-page .menu-list-container,
+body.cf-ilmenite-problem-page .menu-list {
     display: flex !important;
     flex-wrap: nowrap !important;
     height: auto !important;
 }
 
-body:has(.problem-statement) form[action="/search"],
-body:has(.problem-statement) .button-up,
-body:has(.problem-statement) .lang-chooser > div:first-child {
+body.cf-ilmenite-problem-page form[action="/search"],
+body.cf-ilmenite-problem-page .button-up,
+body.cf-ilmenite-problem-page .lang-chooser > div:first-child {
     display: none !important;
 }
 
-body:has(.problem-statement) #pageContent {
+body.cf-ilmenite-problem-page #pageContent {
     margin-top: 0 !important;
     margin-right: 0 !important;
     margin-left: 0 !important;
@@ -279,12 +279,12 @@ body:has(.problem-statement) #pageContent {
 }
 
 
-body:has(.problem-statement) .menu-list li:has(a[href^="/catalog"]),
-body:has(.problem-statement) .menu-list li:has(a[href^="/groups"]),
-body:has(.problem-statement) .menu-list li:has(a[href^="/edu"]),
-body:has(.problem-statement) .menu-list li:has(a[href^="/apiHelp"]),
-body:has(.problem-statement) .menu-list li:has(a[href^="/calendar"]),
-body:has(.problem-statement) .menu-list li:has(a[href^="/help"]) {
+body.cf-ilmenite-problem-page .menu-list li:has(a[href^="/catalog"]),
+body.cf-ilmenite-problem-page .menu-list li:has(a[href^="/groups"]),
+body.cf-ilmenite-problem-page .menu-list li:has(a[href^="/edu"]),
+body.cf-ilmenite-problem-page .menu-list li:has(a[href^="/apiHelp"]),
+body.cf-ilmenite-problem-page .menu-list li:has(a[href^="/calendar"]),
+body.cf-ilmenite-problem-page .menu-list li:has(a[href^="/help"]) {
     display: none !important;
 }
 
@@ -293,24 +293,24 @@ body:has(.problem-statement) .menu-list li:has(a[href^="/help"]) {
 
 
 
-/* Add 5px left padding to all content under problem subheadings */
-.problem-statement .constraints-specification > *:not(.section-title),
-.problem-statement .input-specification > *:not(.section-title),
-.problem-statement .output-specification > *:not(.section-title),
-.problem-statement .sample-tests > *:not(.section-title),
-.problem-statement .note > *:not(.section-title) {
+/* Add 5px left padding to all content under problem subheadings on problem pages */
+.cf-ilmenite-problem-page .problem-statement .constraints-specification > *:not(.section-title),
+.cf-ilmenite-problem-page .problem-statement .input-specification > *:not(.section-title),
+.cf-ilmenite-problem-page .problem-statement .output-specification > *:not(.section-title),
+.cf-ilmenite-problem-page .problem-statement .sample-tests > *:not(.section-title),
+.cf-ilmenite-problem-page .problem-statement .note > *:not(.section-title) {
     padding-left: 5px !important;
 }
 
 /* Add 3px bottom margin to section titles */
-.problem-statement .section-title {
+.cf-ilmenite-problem-page .problem-statement .section-title {
     margin-bottom: 3px !important;
 }
 
 /* Ensure gap is handled via JS inline styles on the header */
 
 /* Fix second level menu clipping when wrapping, ONLY on problem pages to prevent layout breaks elsewhere */
-body:has(.problem-statement) div#pageContent div.second-level-menu {
+body.cf-ilmenite-problem-page div#pageContent div.second-level-menu {
     height: auto !important;
     min-height: min-content !important;
     max-height: none !important;
@@ -319,7 +319,7 @@ body:has(.problem-statement) div#pageContent div.second-level-menu {
     position: relative !important;
     clear: both !important;
 }
-body:has(.problem-statement) div#pageContent div.second-level-menu ul.second-level-menu-list {
+body.cf-ilmenite-problem-page div#pageContent div.second-level-menu ul.second-level-menu-list {
     display: flex !important;
     flex-wrap: wrap !important;
     height: auto !important;
@@ -328,14 +328,14 @@ body:has(.problem-statement) div#pageContent div.second-level-menu ul.second-lev
     row-gap: 6px !important;
     position: relative !important;
 }
-body:has(.problem-statement) div#pageContent div.problemindexholder {
+body.cf-ilmenite-problem-page div#pageContent div.problemindexholder {
     clear: both !important;
 }
 
-body:has(.problem-statement) div#pageContent div.menu-list-container {
+body.cf-ilmenite-problem-page div#pageContent div.menu-list-container {
     height: auto !important;
 }
-body:has(.problem-statement) div#pageContent ul.menu-list {
+body.cf-ilmenite-problem-page div#pageContent ul.menu-list {
     display: flex !important;
     flex-wrap: wrap !important;
     height: auto !important;
@@ -344,7 +344,7 @@ body:has(.problem-statement) div#pageContent ul.menu-list {
     row-gap: 6px !important;
 }
 
-body:has(.problem-statement) #header {
+body.cf-ilmenite-problem-page #header {
     display: none !important;
 }
 
@@ -357,4 +357,29 @@ body:has(.problem-statement) #header {
 #header a[href^="/profile/"],
 .lang-chooser a[href^="/profile/"] {
     font-weight: normal !important;
+}
+
+/* Modals and Facebox popups (diff views, notifications) must layer above sidepanel across entire 100vw split view */
+#facebox {
+    position: absolute !important;
+    z-index: 2147483646 !important;
+}
+#facebox_overlay, .facebox_overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 2147483645 !important;
+}
+.ui-dialog {
+    z-index: 2147483646 !important;
+}
+.ui-widget-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 2147483645 !important;
 }

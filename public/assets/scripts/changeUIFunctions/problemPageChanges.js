@@ -1,6 +1,6 @@
 const isProblemPage = () => {
-    const url = window.location.href;
-    return //problemset/problem/([0-9]+)/([^/]+)|/contest/([0-9]+)/problem/([^/]+)|/gym/([0-9]+)/problem/([^/]+)/.test(url);
+    const pathname = window.location.pathname;
+    return /^\/(?:problemset\/problem\/|contest\/\d+\/problem\/|gym\/\d+\/problem\/|group\/[^/]+\/contest\/\d+\/problem\/|problemsets\/acmsguru\/problem\/)/.test(pathname);
 };
 
 const injectCodeforcesIlmeniteIframe = () => {

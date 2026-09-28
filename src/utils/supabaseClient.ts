@@ -19,4 +19,3 @@ export const supabase = createClient(safeUrl, safeKey);
 
 // Re-export as supabaseClient for backward compatibility
 export const supabaseClient = supabase;
-

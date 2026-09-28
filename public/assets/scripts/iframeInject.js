@@ -1,12 +1,15 @@
 (function () {
 	// Check if we are on a Codeforces problem page
 	const isProblemPage =
-		/^\/(?:problemset\/problem\/|contest\/\d+\/problem\/)/.test(
+		/^\/(?:problemset\/problem\/|contest\/\d+\/problem\/|gym\/\d+\/problem\/|group\/[^/]+\/contest\/\d+\/problem\/|problemsets\/acmsguru\/problem\/)/.test(
 			window.location.pathname,
 		);
 
 	if (!isProblemPage) return;
 	if (document.getElementById("ilmenite-editor-iframe")) return;
+
+	document.documentElement.classList.add("cf-ilmenite-problem-page");
+	document.body.classList.add("cf-ilmenite-problem-page");
 
 	// Hardcode styles inline to guarantee layout overrides regardless of CSS issues
 	const sidebar = document.getElementById("sidebar");
@@ -511,8 +514,8 @@
 						dropdown.className = 'cf-ilmenite-no-invert'; // Tell Ilmenite dark mode to ignore us
 						dropdown.style.position = 'absolute';
 						dropdown.style.top = '100%';
-						dropdown.style.right = '50%';
-						dropdown.style.transform = 'translateX(50%) translateY(-10px)'; // Center dropdown relative to profile header and move up slightly
+						dropdown.style.right = '0';
+						dropdown.style.transform = 'translateY(-10px)'; // Move dropdown up slightly when closed
 						dropdown.style.marginTop = '10px';
 						dropdown.style.backgroundColor = '#1e1e1e';
 						dropdown.style.border = '1px solid #333333';
@@ -522,7 +525,7 @@
 						dropdown.style.display = 'flex';
 						dropdown.style.flexDirection = 'row';
 						dropdown.style.gap = '10px';
-						dropdown.style.zIndex = '100';
+						dropdown.style.zIndex = '99999';
 						dropdown.style.opacity = '0';
 						dropdown.style.visibility = 'hidden';
 						dropdown.style.transition = 'opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease';
@@ -595,7 +598,7 @@
 							isOpen = !isOpen;
 							dropdown.style.opacity = isOpen ? '1' : '0';
 							dropdown.style.visibility = isOpen ? 'visible' : 'hidden';
-							dropdown.style.transform = isOpen ? 'translateX(50%) translateY(0)' : 'translateX(50%) translateY(-10px)';
+							dropdown.style.transform = isOpen ? 'translateY(0)' : 'translateY(-10px)';
 							dropdown.style.pointerEvents = isOpen ? 'auto' : 'none';
 						});
 						
@@ -605,7 +608,7 @@
 								isOpen = false;
 								dropdown.style.opacity = '0';
 								dropdown.style.visibility = 'hidden';
-								dropdown.style.transform = 'translateX(50%) translateY(-10px)';
+								dropdown.style.transform = 'translateY(-10px)';
 								dropdown.style.pointerEvents = 'none';
 							}
 						});
