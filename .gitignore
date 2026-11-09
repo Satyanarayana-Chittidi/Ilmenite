@@ -25,3 +25,13 @@ extension-releases
 *.njsproj
 *.sln
 *.sw?
+
+# Environment variables & secrets
+.env
+*.env
+*/.env
+!*.env.example
+
+# Backend build & dependencies
+backend/node_modules/
+backend/dist/
