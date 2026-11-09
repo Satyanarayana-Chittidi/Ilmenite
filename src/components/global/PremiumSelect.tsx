@@ -1,9 +1,11 @@
+import PremiumLockIcon from './icons/PremiumLockIcon';
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
 
 export interface SelectOption {
     value: string;
     label: string;
+    isLocked?: boolean;
 }
 
 interface PremiumSelectProps {
@@ -20,6 +22,8 @@ const PremiumSelect: React.FC<PremiumSelectProps> = ({
     value, 
     onChange, 
     options, 
+    isLocked = false,
+    onLockedClick,
     className = "",
     disabled = false
 }) => {
@@ -46,7 +50,10 @@ const PremiumSelect: React.FC<PremiumSelectProps> = ({
                 ${disabled ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-zinc-300 dark:hover:bg-zinc-700'}`}
                 onClick={() => {
                     if (disabled) return;
-                    
+                    if (isLocked) {
+                        if (onLockedClick) onLockedClick();
+                        return;
+                    }
                     if (!isOpen && wrapperRef.current) {
                         const rect = wrapperRef.current.getBoundingClientRect();
                         const spaceBelow = window.innerHeight - rect.bottom;
@@ -73,11 +80,19 @@ const PremiumSelect: React.FC<PremiumSelectProps> = ({
                                     ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 font-semibold' 
                                     : 'text-gray-700 dark:text-zinc-300 hover:bg-black/10 dark:hover:bg-white/10'}`}
                             onClick={() => {
+                                if (option.isLocked) {
+                                    setIsOpen(false);
+                                    if (onLockedClick) onLockedClick();
+                                    return;
+                                }
                                 onChange(option.value);
                                 setIsOpen(false);
                             }}
                         >
-                            <span className="truncate">{option.label}</span>
+                            <span className="truncate flex items-center gap-1.5">
+                                {option.label}
+                                {option.isLocked && <PremiumLockIcon size={12} className="text-amber-500 inline shrink-0" />}
+                            </span>
                             {value === option.value && <Check size={14} className="flex-shrink-0 ml-1" />}
                         </div>
                     ))}

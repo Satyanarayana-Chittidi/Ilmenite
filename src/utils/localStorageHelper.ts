@@ -19,11 +19,15 @@ export const handleSaveTemplate = async (editor: monaco.editor.IStandaloneCodeEd
         toast.error("Editor not found!");
         return;
     }
+    const store = useCFStore.getState();
+    if (!store.isPlusUser) {
+        toast.error("Custom templates require an Ilmenite Plus subscription.");
+        return;
+    }
     const editorValue = editor.getValue();
     const compressedTemplate = LZString.compressToUTF16(editorValue);
     localStorage.setItem("template", compressedTemplate);
 
-    const store = useCFStore.getState();
     if (store.isLoggedIn && store.isPlusUser) {
         try {
             await saveCloudTemplate(compressedTemplate);

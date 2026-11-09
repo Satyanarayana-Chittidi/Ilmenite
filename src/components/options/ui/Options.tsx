@@ -1,3 +1,5 @@
+import UpgradePopup from '../../global/popups/UpgradePopup';
+import PremiumLockIcon from '../../global/icons/PremiumLockIcon';
 import { CircleCheck, CircleX, Code, Moon, Settings, SunMedium, Trash2, Keyboard, Scissors } from "lucide-react";
 import { OptionsProps } from "../../../types/types";
 import Option from "./Option";
@@ -76,6 +78,9 @@ const Options = ({ theme, setTheme, changeUI, setChangeUI, setOpenConfirmationPo
 
     const currentUrl = useCFStore(state => state.currentUrl);
     const isWidePanel = useCFStore(state => state.isWidePanel);
+    const isPlusUser = useCFStore(state => state.isPlusUser);
+    const [showUpgradePopup, setShowUpgradePopup] = useState(false);
+    const [upgradeFeatureName, setUpgradeFeatureName] = useState('');
     const [isThemeCustomizerOpen, setIsThemeCustomizerOpen] = useState(false);
     const [isEditorSettingsOpen, setIsEditorSettingsOpen] = useState(false);
     const [isShortcutSettingsOpen, setIsShortcutSettingsOpen] = useState(false);
@@ -121,14 +126,22 @@ const Options = ({ theme, setTheme, changeUI, setChangeUI, setOpenConfirmationPo
                         <div className="flex items-center gap-2">
                             {theme === 'dark' && (
                                 <button
-                                    onClick={() => handlOpenThemeCustomizer()}
+                                    onClick={() => {
+                                        if (!isPlusUser) {
+                                            setUpgradeFeatureName("Advanced Theme Customization");
+                                            setShowUpgradePopup(true);
+                                            return;
+                                        }
+                                        handlOpenThemeCustomizer();
+                                    }}
                                     className={`relative ${buttonClass} group`}
-                                    title="Advanced theme settings"
+                                    title={isPlusUser ? "Advanced theme settings" : "Advanced theme customization is an Ilmenite Plus feature"}
                                     aria-label="Theme settings"
                                 >
                                     <div>
                                         <Settings className="transition-transform duration-300 group-hover:rotate-90" size={20} color="#ffffff" />
                                     </div>
+                                    {!isPlusUser && <PremiumLockIcon size={11} className="absolute -top-1 -right-1 text-amber-500" />}
                                 </button>
                             )}
 
@@ -153,21 +166,37 @@ const Options = ({ theme, setTheme, changeUI, setChangeUI, setOpenConfirmationPo
 
                     <Option title="Code Snippets">
                         <button
-                            onClick={() => setIsSnippetSettingsOpen(true)}
-                            className={`${buttonClass}`}
-                            title="Code snippets"
+                            onClick={() => {
+                                if (!isPlusUser) {
+                                    setUpgradeFeatureName("Custom Code Snippets");
+                                    setShowUpgradePopup(true);
+                                    return;
+                                }
+                                setIsSnippetSettingsOpen(true);
+                            }}
+                            className={`relative ${buttonClass}`}
+                            title={isPlusUser ? "Code snippets" : "Code snippets are an Ilmenite Plus feature"}
                         >
                             <Scissors color={theme === 'light' ? "#111111" : "#ffffff"} />
+                            {!isPlusUser && <PremiumLockIcon size={11} className="absolute -top-1 -right-1 text-amber-500" />}
                         </button>
                     </Option>
 
                     <Option title="Shortcut Settings">
                         <button
-                            onClick={() => setIsShortcutSettingsOpen(true)}
-                            className={`${buttonClass}`}
-                            title="Shortcut settings"
+                            onClick={() => {
+                                if (!isPlusUser) {
+                                    setUpgradeFeatureName("Custom Shortcuts");
+                                    setShowUpgradePopup(true);
+                                    return;
+                                }
+                                setIsShortcutSettingsOpen(true);
+                            }}
+                            className={`relative ${buttonClass}`}
+                            title={isPlusUser ? "Shortcut settings" : "Custom shortcuts are an Ilmenite Plus feature"}
                         >
                             <Keyboard color={theme === 'light' ? "#111111" : "#ffffff"} />
+                            {!isPlusUser && <PremiumLockIcon size={11} className="absolute -top-1 -right-1 text-amber-500" />}
                         </button>
                     </Option>
 
@@ -195,6 +224,7 @@ const Options = ({ theme, setTheme, changeUI, setChangeUI, setOpenConfirmationPo
                     </Option>
                 </div>
             </div>
+            <UpgradePopup isOpen={showUpgradePopup} onClose={() => setShowUpgradePopup(false)} featureName={upgradeFeatureName} />
         </>
     );
 };

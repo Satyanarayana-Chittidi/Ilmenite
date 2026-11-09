@@ -1,3 +1,5 @@
+import UpgradePopup from '../../global/popups/UpgradePopup';
+import PremiumLockIcon from '../../global/icons/PremiumLockIcon';
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { TestCase } from '../../../types/types';
 import { MAX_TEST_CASES } from '../../../data/constants';
@@ -14,6 +16,9 @@ const TestCases = React.memo(() => {
     const testCases = useCFStore((state) => state.testCases);
     const setTestCases = useCFStore((state) => state.setTestCases);
     const isRunning = useCFStore((state) => state.isRunning);
+    const isPlusUser = useCFStore((state) => state.isPlusUser);
+    const [showUpgradePopup, setShowUpgradePopup] = useState<boolean>(false);
+    const [upgradeFeatureName, setUpgradeFeatureName] = useState<string>('');
     const [copied, setCopied] = useState<{ input: boolean, expectedOutput: boolean, output: boolean }>({ input: false, expectedOutput: false, output: false });
 
     const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -134,6 +139,11 @@ const TestCases = React.memo(() => {
     };
 
     const addTestCase = () => {
+        if (!isPlusUser) {
+            setUpgradeFeatureName("Custom Test Cases");
+            setShowUpgradePopup(true);
+            return;
+        }
         if (testCases.testCases.length < MAX_TEST_CASES) {
             const newTestCase: TestCase = {
                 Input: '', ExpectedOutput: '',
@@ -186,9 +196,10 @@ const TestCases = React.memo(() => {
                                     onClick={addTestCase}
                                     className={`relative bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-all text-sm h-7 w-7 rounded-lg flex items-center justify-center ${testCases.testCases.length >= MAX_TEST_CASES || isRunning ? "cursor-not-allowed opacity-50" : ""}`}
                                     disabled={testCases.testCases.length >= MAX_TEST_CASES || isRunning}
-                                    title="Add test case"
+                                    title={isPlusUser ? "Add test case" : "Custom test cases are an Ilmenite Plus feature"}
                                 >
                                     <Plus className="text-[#111111] dark:text-[#ffffff]" size={16} />
+                                    {!isPlusUser && <PremiumLockIcon size={11} className="absolute -top-1 -right-1 text-amber-500" />}
                                 </button>
                             </div>
                         </h2>
@@ -284,6 +295,7 @@ const TestCases = React.memo(() => {
                     )}
                 </div>
             )}
+            <UpgradePopup isOpen={showUpgradePopup} onClose={() => setShowUpgradePopup(false)} featureName={upgradeFeatureName || "Custom Test Cases"} />
         </>
     );
 });

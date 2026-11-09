@@ -65,8 +65,9 @@ export const useEditorSettings = (editorSettings: EditorSettingsTypes, setEditor
 
             const vimEditor = editor as IVimEditor;
 
+            const isPlusUser = useCFStore.getState().isPlusUser;
             const currentKeyBinding = editorSettings.keyBinding;
-            if(currentKeyBinding == "vim") {
+            if(currentKeyBinding == "vim" && isPlusUser) {
                 if(!vimEditor.vimMode) {
                     vimEditor.vimMode = initVimMode(editor, vimEditor.vimStatusRef.current);
                 }

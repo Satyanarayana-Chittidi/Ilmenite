@@ -44,6 +44,8 @@ interface CFStoreInterface {
     setEmail: (email: string | null) => void;
     session: any | null;
     setSession: (session: any | null) => void;
+    avatarUrl: string | null;
+    setAvatarUrl: (url: string | null) => void;
     supabaseAvatar: string | null;
     setSupabaseAvatar: (url: string | null) => void;
 
@@ -94,7 +96,8 @@ export const useCFStore = create<CFStoreInterface>((set) => ({
     isLoggedIn: localStorage.getItem('isLoggedIn') === 'true', // Default to false unless explicitly true
     email: localStorage.getItem('email') || null,
     session: safeJsonParse('session', null),
-    supabaseAvatar: localStorage.getItem('supabaseAvatar') || null,
+    avatarUrl: localStorage.getItem('avatarUrl') || localStorage.getItem('supabaseAvatar') || null,
+    supabaseAvatar: localStorage.getItem('avatarUrl') || localStorage.getItem('supabaseAvatar') || null,
     cloudCodeCount: null,
     cloudSaveStatus: 'idle',
     liveContestTime: null,
@@ -120,7 +123,8 @@ export const useCFStore = create<CFStoreInterface>((set) => ({
     setIsLoggedIn: (isLogged) => { localStorage.setItem('isLoggedIn', String(isLogged)); set({ isLoggedIn: isLogged }) },
     setEmail: (email) => { if(email) localStorage.setItem('email', email); else localStorage.removeItem('email'); set({ email }) },
     setSession: (session) => { if(session) localStorage.setItem('session', JSON.stringify(session)); else localStorage.removeItem('session'); set({ session }) },
-    setSupabaseAvatar: (url) => { if(url) localStorage.setItem('supabaseAvatar', url); else localStorage.removeItem('supabaseAvatar'); set({ supabaseAvatar: url }) },
+    setAvatarUrl: (url) => { if(url) { localStorage.setItem('avatarUrl', url); localStorage.setItem('supabaseAvatar', url); } else { localStorage.removeItem('avatarUrl'); localStorage.removeItem('supabaseAvatar'); } set({ avatarUrl: url, supabaseAvatar: url }) },
+    setSupabaseAvatar: (url) => { if(url) { localStorage.setItem('avatarUrl', url); localStorage.setItem('supabaseAvatar', url); } else { localStorage.removeItem('avatarUrl'); localStorage.removeItem('supabaseAvatar'); } set({ avatarUrl: url, supabaseAvatar: url }) },
     setCloudCodeCount: (count) => set({ cloudCodeCount: count }),
     setCloudSaveStatus: (status) => set({ cloudSaveStatus: status }),
     setLiveContestTime: (time) => set({ liveContestTime: time }),

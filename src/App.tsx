@@ -3,6 +3,7 @@ import './App.css';
 import Options from './components/options/page';
 import Main from './components/main/page';
 import { browserAPI } from './utils/browser/browserDetect';
+import { API_BASE_URL } from './utils/apiConfig';
 import { useCFStore } from './zustand/useCFStore';
 import { getCloudCodeCount } from './utils/services/cloudCodeService';
 import { Code2 } from 'lucide-react';
@@ -53,9 +54,11 @@ const App = () => {
                 }
             }
             if (areaName === "local" && changes.isPlusUser !== undefined) {
-                useCFStore.getState().setIsPlusUser(changes.isPlusUser.newValue);
-                if (changes.isPlusUser.newValue === true) {
-                    toast.success("Ilmenite Plus Activated!");
+                const wasOldPlus = changes.isPlusUser.oldValue;
+                const isNewPlus = changes.isPlusUser.newValue;
+                useCFStore.getState().setIsPlusUser(isNewPlus);
+                if (isNewPlus === true && wasOldPlus !== true) {
+                    toast.success("Ilmenite Plus Activated!", { id: "ilmenite-plus-toast" });
                     getCloudCodeCount().then(count => {
                         useCFStore.getState().setCloudCodeCount(count);
                     }).catch(err => console.error("Failed to fetch cloud code count", err));
@@ -85,13 +88,14 @@ const App = () => {
             if (areaName === "local" && changes.session !== undefined) {
                 useCFStore.getState().setSession(changes.session.newValue);
             }
-            if (areaName === "local" && changes.supabaseAvatar !== undefined) {
-                useCFStore.getState().setSupabaseAvatar(changes.supabaseAvatar.newValue);
+            if (areaName === "local" && (changes.avatarUrl !== undefined || changes.supabaseAvatar !== undefined)) {
+                const newAvatar = changes.avatarUrl ? changes.avatarUrl.newValue : changes.supabaseAvatar.newValue;
+                useCFStore.getState().setAvatarUrl(newAvatar);
             }
         };
         browserAPI.storage.onChanged.addListener(handleStorageChange);
 
-        browserAPI.storage.local.get(['isPlusUser', 'isLoggedIn', 'email', 'session', 'supabaseAvatar', 'template'], (res) => {
+        browserAPI.storage.local.get(['userId', 'authToken', 'isPlusUser', 'isLoggedIn', 'email', 'session', 'avatarUrl', 'supabaseAvatar', 'template'], (res) => {
             if (res.isPlusUser !== undefined) {
                 useCFStore.getState().setIsPlusUser(res.isPlusUser);
             }
@@ -104,11 +108,40 @@ const App = () => {
             if (res.session !== undefined) {
                 useCFStore.getState().setSession(res.session);
             }
-            if (res.supabaseAvatar !== undefined) {
-                useCFStore.getState().setSupabaseAvatar(res.supabaseAvatar);
+            if (res.avatarUrl !== undefined || res.supabaseAvatar !== undefined) {
+                useCFStore.getState().setAvatarUrl(res.avatarUrl || res.supabaseAvatar);
             }
             if (res.template && !localStorage.getItem('template')) {
                 localStorage.setItem('template', res.template);
+            }
+
+            const identifier = res.userId || res.email || res.session?.user?.id || res.session?.user?.email;
+
+            // Live verify subscription tier directly from MySQL database on load
+            if (identifier && (res.isLoggedIn || res.email)) {
+                const queryParam = res.email ? `email=${encodeURIComponent(res.email)}` : '';
+                fetch(`${API_BASE_URL}/payment/status/${encodeURIComponent(identifier)}?${queryParam}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.tier) {
+                            const isPlusInDB = data.tier === 'plus';
+                            const wasPlus = useCFStore.getState().isPlusUser;
+
+                            if (wasPlus && !isPlusInDB) {
+                                console.log('[Subscription Sync] Downgraded to Free tier in DB.');
+                                useCFStore.getState().setIsPlusUser(false);
+                                browserAPI.storage.local.set({ isPlusUser: false });
+                                useCFStore.getState().setShowDowngradePopup(true);
+                            } else if (!wasPlus && isPlusInDB) {
+                                console.log('[Subscription Sync] Upgraded to Plus tier in DB.');
+                                useCFStore.getState().setIsPlusUser(true);
+                                browserAPI.storage.local.set({ isPlusUser: true });
+                            }
+                        }
+                    })
+                    .catch(err => {
+                        console.warn('[Subscription Sync] Error checking subscription status:', err);
+                    });
             }
 
             if (res.isLoggedIn && res.isPlusUser) {
@@ -133,8 +166,8 @@ const App = () => {
                 if (event.data.session !== undefined) {
                     useCFStore.getState().setSession(event.data.session);
                 }
-                if (event.data.supabaseAvatar !== undefined) {
-                    useCFStore.getState().setSupabaseAvatar(event.data.supabaseAvatar);
+                if (event.data.avatarUrl !== undefined || event.data.supabaseAvatar !== undefined) {
+                    useCFStore.getState().setAvatarUrl(event.data.avatarUrl || event.data.supabaseAvatar);
                 }
                 if (event.data.isLoggedIn && (event.data.isPlusUser || useCFStore.getState().isPlusUser)) {
                     import('./utils/services/cloudCodeService').then(module => {

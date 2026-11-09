@@ -38,7 +38,7 @@ globalThis.browserAPI.runtime.onMessage.addListener((request, sender, sendRespon
             isPlusUser: false,
             session: null,
             email: null,
-            supabaseAvatar: null,
+            avatarUrl: null, supabaseAvatar: null,
             needsLandingPageLogout: false
         });
         sendResponse({ success: true });
@@ -52,7 +52,7 @@ globalThis.browserAPI.runtime.onMessage.addListener((request, sender, sendRespon
             isPlusUser: request.isPlusUser || false, 
             email: email,
             session: request.session || null,
-            supabaseAvatar: request.supabaseAvatar || null
+            avatarUrl: request.avatarUrl || request.supabaseAvatar, supabaseAvatar: request.avatarUrl || request.supabaseAvatar || null
         });
         
         // Notify all active tabs that we logged in
@@ -63,7 +63,7 @@ globalThis.browserAPI.runtime.onMessage.addListener((request, sender, sendRespon
                     isLoggedIn: true, 
                     email: email,
                     session: request.session || null,
-                    supabaseAvatar: request.supabaseAvatar || null
+                    avatarUrl: request.avatarUrl || request.supabaseAvatar, supabaseAvatar: request.avatarUrl || request.supabaseAvatar || null
                 });
                 if (request.isPlusUser) {
                     browserAPI.tabs.sendMessage(tab.id, { type: 'TOGGLE_PLUS_USER', isPlusUser: true });
@@ -83,3 +83,25 @@ globalThis.browserAPI.runtime.onMessage.addListener((request, sender, sendRespon
 
 
 
+
+
+// External message listener for landing page detection & seamless account sync
+if (globalThis.browserAPI && globalThis.browserAPI.runtime && globalThis.browserAPI.runtime.onMessageExternal) {
+    globalThis.browserAPI.runtime.onMessageExternal.addListener((request, sender, sendResponse) => {
+        if (request.type === 'PING_EXTENSION' || request.type === 'GET_USER_STATE') {
+            browserAPI.storage.local.get(['session', 'authToken', 'userId', 'email', 'isPlusUser', 'avatarUrl', 'supabaseAvatar'], (res) => {
+                sendResponse({
+                    installed: true,
+                    version: browserAPI.runtime.getManifest().version,
+                    user: {
+                        id: res.userId || res.session?.user?.id || null,
+                        email: res.email || res.session?.user?.email || null,
+                        isPlusUser: res.isPlusUser || false,
+                        avatarUrl: res.avatarUrl || res.supabaseAvatar || null
+                    }
+                });
+            });
+            return true;
+        }
+    });
+}

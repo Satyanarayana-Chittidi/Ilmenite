@@ -11,7 +11,7 @@ import { useTabEvents } from '../../utils/hooks/useTabEvents';
 import { handleSubmission } from '../../utils/services/submissionService';
 import { initializeStorage, saveCodeForSlug, saveTestCaseForSlug } from '../../utils/services/storageService';
 import { loadCodeWithCursor } from '../../utils/codeHandlers';
-import { fetchCloudCode } from '../../utils/services/cloudCodeService';
+import { fetchCloudCode, setLastSyncedCloudCode } from '../../utils/services/cloudCodeService';
 import LZString from 'lz-string';
 import { accessRestrictionMessage } from '../../data/constants';
 import ApiLimitAlert from '../global/popups/ApiLimitAlert';
@@ -134,6 +134,10 @@ const Main: React.FC<MainProps> = ({ showOptionsRef, setShowOptions, theme }) =>
                 if (newSlug) {
                     let codeForUrl = getCodeMap().get(newSlug)?.code || '';
 
+                    if (codeForUrl) {
+                        setLastSyncedCloudCode(newSlug, codeForUrl);
+                    }
+
                     if (!codeForUrl && useCFStore.getState().isPlusUser) {
                         const cloudCode = await fetchCloudCode(newSlug);
                         if (cloudCode) {
@@ -232,12 +236,16 @@ const Main: React.FC<MainProps> = ({ showOptionsRef, setShowOptions, theme }) =>
 
         document.addEventListener('visibilitychange', handleVisibilityOrBlur);
         window.addEventListener('blur', handleVisibilityOrBlur);
+        window.addEventListener('pagehide', handleVisibilityOrBlur);
+        window.addEventListener('beforeunload', handleVisibilityOrBlur);
 
         return () => {
             window.removeEventListener('keydown', handleKeyDown, { capture: true });
             window.removeEventListener('keyup', handleKeyUp, { capture: true });
             document.removeEventListener('visibilitychange', handleVisibilityOrBlur);
             window.removeEventListener('blur', handleVisibilityOrBlur);
+            window.removeEventListener('pagehide', handleVisibilityOrBlur);
+            window.removeEventListener('beforeunload', handleVisibilityOrBlur);
         };
     }, [currentSlug, runCode, handleSubmission]);
 

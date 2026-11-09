@@ -17,12 +17,7 @@ const config: webpack.Configuration = {
         globalObject: 'self',
         clean: true,
     },
-    cache: {
-        type: 'filesystem',
-        buildDependencies: {
-            config: [__filename],
-        },
-    },
+    cache: false,
     module: {
         rules: [
             {

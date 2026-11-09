@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { useCFStore } from '../../../zustand/useCFStore';
 import { LogOut, Camera, ChevronDown, RefreshCw } from 'lucide-react';
 import { browserAPI } from '../../../utils/browser/browserDetect';
-import { supabaseClient } from '../../../utils/supabaseClient';
+import { API_BASE_URL } from '../../../utils/apiConfig';
 import Option from '../../options/ui/Option';
 import { toast } from 'sonner';
 
@@ -20,8 +20,8 @@ const AccountBar: React.FC<AccountBarProps> = () => {
     const setIsLoggedIn = useCFStore(state => state.setIsLoggedIn);
     const email = useCFStore(state => state.email);
     const session = useCFStore(state => state.session);
-    const supabaseAvatar = useCFStore(state => state.supabaseAvatar);
-    const setSupabaseAvatar = useCFStore(state => state.setSupabaseAvatar);
+    const avatarUrl = useCFStore(state => state.avatarUrl || state.supabaseAvatar);
+    const setAvatarUrl = useCFStore(state => state.setAvatarUrl);
     const [showCancelPopup, setShowCancelPopup] = useState(false);
     const [showLogoutPopup, setShowLogoutPopup] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
@@ -57,89 +57,75 @@ const AccountBar: React.FC<AccountBarProps> = () => {
     };
 
     const confirmLogout = async () => {
-        try {
-            // Sign out of Supabase backend
-            await supabaseClient.auth.signOut();
-        } catch (e) {
-            console.error("Error signing out of Supabase:", e);
-        }
-        
         // Clear local state
         setIsLoggedIn(false);
         useCFStore.getState().setIsPlusUser(false);
         useCFStore.getState().setSession(null);
         useCFStore.getState().setEmail(null);
-        useCFStore.getState().setSupabaseAvatar(null);
+        useCFStore.getState().setAvatarUrl(null);
 
         // Tell background that we logged out
         browserAPI.storage.local.set({ 
             isLoggedIn: false, 
             isPlusUser: false,
             session: null,
+            authToken: null,
+            userId: null,
             email: null,
+            avatarUrl: null,
             supabaseAvatar: null
         });
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('isPlusUser');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('email');
+        localStorage.removeItem('session');
         
         setShowLogoutPopup(false);
     };
 
     const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || e.target.files.length === 0) return;
-        if (!session) {
-            alert("Session missing. Please log out and log back in to enable uploads.");
-            return;
-        }
-
         const file = e.target.files[0];
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${session.user.id}-${Math.random()}.${fileExt}`;
-        const filePath = `${fileName}`;
-
+        const reader = new FileReader();
         setIsUploading(true);
 
-        try {
-            const { data: sessionData, error: sessionError } = await supabaseClient.auth.setSession({
-                access_token: session.access_token,
-                refresh_token: session.refresh_token
-            });
-            if (sessionError) {
-                alert("Session error: " + sessionError.message);
+        reader.onload = async () => {
+            const dataUrl = reader.result as string;
+            setAvatarUrl(dataUrl);
+            browserAPI.storage.local.set({ avatarUrl: dataUrl, supabaseAvatar: dataUrl });
+            localStorage.setItem('avatarUrl', dataUrl);
+            localStorage.setItem('supabaseAvatar', dataUrl);
+
+            try {
+                const storageRes = await new Promise<any>((resolve) =>
+                    browserAPI.storage.local.get(['authToken'], resolve)
+                );
+                const token = storageRes.authToken || localStorage.getItem('authToken');
+                if (token) {
+                    await fetch(`${API_BASE_URL}/auth/avatar`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ avatar_url: dataUrl })
+                    });
+                }
+            } catch (err) {
+                console.error("Failed to sync avatar to database:", err);
+            } finally {
                 setIsUploading(false);
-                return;
             }
+        };
 
-            const { error: uploadError } = await supabaseClient.storage
-                .from('avatars')
-                .upload(filePath, file);
-
-            if (uploadError) {
-                alert('Storage Upload Error: ' + uploadError.message);
-                setIsUploading(false);
-                return;
-            }
-
-            const { data } = supabaseClient.storage.from('avatars').getPublicUrl(filePath);
-            const publicUrl = data.publicUrl;
-
-            const { error: updateError } = await supabaseClient
-                .from('profiles')
-                .update({ avatar_url: publicUrl })
-                .eq('id', session.user.id);
-
-            if (updateError) {
-                alert('Database Update Error: ' + updateError.message);
-                setIsUploading(false);
-                return;
-            }
-
-            setSupabaseAvatar(publicUrl);
-            browserAPI.storage.local.set({ supabaseAvatar: publicUrl });
-
-        } catch (error: any) {
-            alert('Unknown Error: ' + error.message);
-        } finally {
+        reader.onerror = () => {
+            toast.error("Failed to load image file");
             setIsUploading(false);
-        }
+        };
+
+        reader.readAsDataURL(file);
     };
 
     const handleBadgeClick = () => {
@@ -167,8 +153,8 @@ const AccountBar: React.FC<AccountBarProps> = () => {
                     accept="image/*" 
                     onChange={handleAvatarUpload} 
                 />
-                {supabaseAvatar ? (
-                    <img src={supabaseAvatar} alt="Avatar" className={`w-10 h-10 rounded-full border-2 ${isUploading ? 'border-transparent' : 'border-gray-300 dark:border-gray-700'} object-cover group-hover:opacity-75 transition-opacity`} />
+                {avatarUrl ? (
+                    <img src={avatarUrl} alt="Avatar" className={`w-10 h-10 rounded-full border-2 ${isUploading ? 'border-transparent' : 'border-gray-300 dark:border-gray-700'} object-cover group-hover:opacity-75 transition-opacity`} />
                 ) : (
                     <div className={`w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center text-lg font-bold border-2 ${isUploading ? 'border-transparent' : 'border-transparent'} group-hover:opacity-75 transition-opacity`}>
                         {displayName ? displayName.charAt(0).toUpperCase() : '?'}
@@ -211,30 +197,57 @@ const AccountBar: React.FC<AccountBarProps> = () => {
             toast.info(`Please wait ${refreshCooldown}s before checking subscription status again.`);
             return;
         }
-        if (!session?.user?.id) {
+
+        let userEmail = email || session?.user?.email;
+        let userId = session?.user?.id;
+        let identifier = userId || userEmail;
+
+        if (!identifier) {
+            const storageRes = await new Promise((resolve) =>
+                browserAPI.storage.local.get(['userId', 'email', 'session'], resolve)
+            );
+            userEmail = storageRes?.email || storageRes?.session?.user?.email || userEmail;
+            userId = storageRes?.userId || storageRes?.session?.user?.id || userId;
+            identifier = userId || userEmail;
+        }
+
+        if (!identifier && !isLoggedIn) {
             toast.error("You must be logged in to check subscription status.");
             return;
         }
 
         setIsCheckingTier(true);
         localStorage.setItem('lastTierRefreshClick', Date.now().toString());
-        setRefreshCooldown(60);
+        setRefreshCooldown(5);
 
         try {
-            const { data, error } = await supabaseClient
-                .from('profiles')
-                .select('tier')
-                .eq('id', session.user.id)
-                .single();
+            const queryParam = userEmail ? `email=${encodeURIComponent(userEmail)}` : '';
+            const res = await fetch(`${API_BASE_URL}/payment/status/${encodeURIComponent(identifier || 'check')}?${queryParam}`);
+            const data = await res.json();
 
-            if (error) throw error;
+            if (!res.ok) {
+                throw new Error(data.error || 'Failed to check subscription');
+            }
 
             if (data?.tier === 'plus') {
+                const wasPlus = isPlusUser;
                 setIsPlusUser(true);
                 browserAPI.storage.local.set({ isPlusUser: true });
-                toast.success("Ilmenite Plus Activated!");
+                if (wasPlus) {
+                    toast.info("Subscription refreshed: Ilmenite Plus is active.", { id: "ilmenite-plus-toast" });
+                    import('../../../utils/services/cloudCodeService').then(module => {
+                        module.getCloudCodeCount().then(count => {
+                            useCFStore.getState().setCloudCodeCount(count);
+                        }).catch(err => console.error("Failed to fetch cloud code count", err));
+                        module.syncSettingsFromCloud();
+                    });
+                }
+                // When !wasPlus, browserAPI.storage.local.set({ isPlusUser: true }) triggers handleStorageChange in App.tsx
+                // which automatically fires the single "Ilmenite Plus Activated!" toast and syncs cloud codes/settings!
             } else {
-                toast.info("Your subscription tier is Free.");
+                setIsPlusUser(false);
+                browserAPI.storage.local.set({ isPlusUser: false });
+                toast.info("Your subscription tier is Free.", { id: "ilmenite-plus-toast" });
             }
         } catch (err: any) {
             toast.error("Failed to check subscription: " + (err.message || 'Unknown error'));

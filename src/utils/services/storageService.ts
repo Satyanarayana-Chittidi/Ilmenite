@@ -4,7 +4,7 @@ import { Queue } from '../Queue';
 import { MAX_PROBLEM_IO_SIZE, SINGLE_CODE_LIMIT_BYTES, STORAGE_LIMIT_BYTES } from '../../data/constants';
 import * as monaco from 'monaco-editor';
 import { useCFStore } from '../../zustand/useCFStore';
-import { saveCloudCode, getCloudCodeCount } from './cloudCodeService';
+import { saveCloudCode, getCloudCodeCount, hasCloudCodeChanged } from './cloudCodeService';
 import LZString from 'lz-string';
 
 export const saveCodeForSlug = async (
@@ -71,6 +71,11 @@ export const saveCodeForSlug = async (
 
         const store = useCFStore.getState();
         if (syncToCloud && store.isLoggedIn && store.isPlusUser) {
+            // Only trigger cloud save and show "saving" status if code has actually changed
+            if (!hasCloudCodeChanged(slug, compressedCode)) {
+                return;
+            }
+
             useCFStore.getState().setCloudSaveStatus('saving');
             console.log(`[Storage] Triggering cloud save for ${slug}`);
             const minDelay = new Promise(resolve => setTimeout(resolve, 1000));
@@ -92,7 +97,7 @@ export const saveCodeForSlug = async (
                     useCFStore.getState().setCloudSaveStatus('idle');
                 }, 2000);
             }).catch(err => {
-                console.error("Background sync to Supabase failed", err);
+                console.error("Background sync to cloud database failed", err);
                 useCFStore.getState().setCloudSaveStatus('idle');
             });
         }

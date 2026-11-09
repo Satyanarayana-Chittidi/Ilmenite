@@ -32,10 +32,10 @@ const CodeEditor = React.memo(({ monacoInstanceRef, language, fontSize, template
     const { customSnippets } = useCustomSnippets();
 
     useEffect(() => {
-        if (monaco && language) {
+        if (monaco && language && isPlusUser) {
             registerCustomSnippets(monaco, language, customSnippets[language] || []);
         }
-    }, [language, customSnippets]);
+    }, [language, customSnippets, isPlusUser]);
 
     useEffect(() => {
         const loadThemes = async () => {
@@ -98,7 +98,7 @@ const CodeEditor = React.memo(({ monacoInstanceRef, language, fontSize, template
                 vimEditor.vimStatusRef = vimStatusRef;
 
                 const currentKeyBinding = editorSettings.keyBinding;
-                if(currentKeyBinding == "vim") {
+                if(currentKeyBinding == "vim" && isPlusUser) {
                     vimEditor.vimMode = initVimMode(monacoInstanceRef.current, vimStatusRef.current);
                 }
             }
@@ -128,7 +128,7 @@ const CodeEditor = React.memo(({ monacoInstanceRef, language, fontSize, template
 
             const vimEditor = monacoInstanceRef.current as any;
             const currentKeyBinding = editorSettings.keyBinding;
-            if(currentKeyBinding == "vim") {
+            if(currentKeyBinding == "vim" && isPlusUser) {
                 if(!vimEditor.vimMode && vimEditor.vimStatusRef?.current) {
                     vimEditor.vimMode = initVimMode(monacoInstanceRef.current, vimEditor.vimStatusRef.current);
                 }
@@ -145,6 +145,18 @@ const CodeEditor = React.memo(({ monacoInstanceRef, language, fontSize, template
         let debounceTimer: number | null = null;
         let disposable: monaco.IDisposable | null = null;
 
+        // Immediate flush helper on blur or departure
+        const flushSave = (editor: monaco.editor.IStandaloneCodeEditor | null) => {
+            if (debounceTimer) {
+                window.clearTimeout(debounceTimer);
+                debounceTimer = null;
+            }
+            const slug = useCFStore.getState().currentSlug;
+            if (slug && editor) {
+                saveCodeForSlug(slug, editor, useCFStore.getState().totalSize, useCFStore.getState().setTotalSize, true);
+            }
+        };
+
         const checkInterval = setInterval(() => {
             if (monacoInstanceRef.current) {
                 clearInterval(checkInterval);
@@ -153,21 +165,19 @@ const CodeEditor = React.memo(({ monacoInstanceRef, language, fontSize, template
                     const slug = useCFStore.getState().currentSlug;
                     if (!slug) return;
                     
+                    // Reset debounce timer on every keystroke
                     if (debounceTimer) window.clearTimeout(debounceTimer);
                     debounceTimer = window.setTimeout(() => {
                         const editor = monacoInstanceRef.current;
                         if (editor) {
-                            saveCodeForSlug(slug, editor, useCFStore.getState().totalSize, useCFStore.getState().setTotalSize, false);
+                            // Hybrid Option C: 1.5s after user pauses typing, auto-sync (if dirty)
+                            saveCodeForSlug(slug, editor, useCFStore.getState().totalSize, useCFStore.getState().setTotalSize, true);
                         }
-                    }, 1000);
+                    }, 1500);
                 });
 
                 monacoInstanceRef.current.onDidBlurEditorWidget(() => {
-                    const slug = useCFStore.getState().currentSlug;
-                    const editor = monacoInstanceRef.current;
-                    if (slug && editor) {
-                        saveCodeForSlug(slug, editor, useCFStore.getState().totalSize, useCFStore.getState().setTotalSize, true);
-                    }
+                    flushSave(monacoInstanceRef.current);
                 });
             }
         }, 100);

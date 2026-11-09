@@ -40,12 +40,12 @@
     `;
 	document.documentElement.appendChild(themeStyle);
 
-	let currentSupabaseAvatar = null;
+	let currentAvatarUrl = null;
 	let updateAvatarDisplayFn = null;
 
-	browserAPI.storage.local.get(["sidePanelWidth", "theme", "supabaseAvatar"]).then((result) => {
+	browserAPI.storage.local.get(["sidePanelWidth", "theme", "avatarUrl", "supabaseAvatar"]).then((result) => {
 		isDark = result.theme !== "light";
-		currentSupabaseAvatar = result.supabaseAvatar || null;
+		currentAvatarUrl = result.avatarUrl || result.supabaseAvatar || null;
 
 		const btnContainer = document.createElement("div");
 		btnContainer.id = "ilmenite-floating-btns";
@@ -141,8 +141,8 @@
 					updateBtnStyles();
 					if (updateAvatarDisplayFn) updateAvatarDisplayFn();
 				}
-				if (changes.supabaseAvatar !== undefined) {
-					currentSupabaseAvatar = changes.supabaseAvatar.newValue || null;
+				if (changes.avatarUrl !== undefined || changes.supabaseAvatar !== undefined) {
+					currentAvatarUrl = (changes.avatarUrl ? changes.avatarUrl.newValue : changes.supabaseAvatar.newValue) || null;
 					if (updateAvatarDisplayFn) updateAvatarDisplayFn();
 				}
 			}
@@ -432,7 +432,7 @@
 						let isCfAvatarActive = false;
 
 						const showAccountFallback = () => {
-							if (currentSupabaseAvatar) {
+							if (currentAvatarUrl) {
 								img.onload = () => {
 									img.style.display = 'block';
 									initialsFallback.style.display = 'none';
@@ -441,7 +441,7 @@
 									img.style.display = 'none';
 									initialsFallback.style.display = 'flex';
 								};
-								img.src = currentSupabaseAvatar;
+								img.src = currentAvatarUrl;
 							} else {
 								img.style.display = 'none';
 								initialsFallback.style.display = 'flex';

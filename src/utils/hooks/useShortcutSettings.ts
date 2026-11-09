@@ -1,3 +1,4 @@
+import { useCFStore } from '../../zustand/useCFStore';
 import { syncSettingsGroupToCloud } from '../services/cloudCodeService';
 import { useEffect } from 'react';
 import { ShortcutSettings } from '../../types/types';
@@ -17,6 +18,9 @@ export const useShortcutSettings = (settings: ShortcutSettings, setSettings: (se
     };
 
     const saveShortcutSettings = () => {
+        if (!useCFStore.getState().isPlusUser) {
+            return;
+        }
         localStorage.setItem('shortcutSettings', JSON.stringify(settings));
         syncSettingsGroupToCloud();
     };

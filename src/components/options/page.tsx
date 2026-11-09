@@ -122,15 +122,22 @@ const Settings: React.FC<SettingsProps> = ({ setShowOptions, theme, setTheme }) 
                                 </button>
                                 <button 
                                     onClick={() => {
+                                        if (!isPlusUser) {
+                                            setUpgradeFeatureName("Custom Code Template");
+                                            setShowUpgradePopup(true);
+                                            return;
+                                        }
                                         handleSaveTemplate(monacoInstanceRef.current);
                                     }} 
                                     aria-label="Save template" 
+                                    title={isPlusUser ? "Save template" : "Custom template saving is an Ilmenite Plus feature"}
                                     className={`group relative h-1/2 text-[#22c55e] text-sm px-2.5 py-1 font-bold rounded-lg gap-1 mt-1 bg-gray-200 dark:bg-[#2a2a2a] hover:bg-green-100 dark:hover:bg-green-900/30 transition-all duration-200 flex justify-center items-center shadow-sm`}
                                 >
                                     <div className={`flex items-center gap-1`}>
                                         <Save color="#22c55e" size={18} />
                                         Save
                                     </div>
+                                    {!isPlusUser && <PremiumLockIcon size={12} className="absolute -top-1 -right-1 text-amber-500" />}
                                 </button>
                             </div>
                         </div>

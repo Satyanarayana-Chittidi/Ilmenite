@@ -17,7 +17,6 @@
         "zip:chrome": "npm run ensure-releases-dir && cd dist && bestzip ../extension-releases/ilmenite-chrome-v%npm_package_version%.zip *"
     },
     "dependencies": {
-        "@supabase/supabase-js": "^2.110.7",
         "@types/chrome": "^0.0.272",
         "framer-motion": "^11.11.8",
         "lucide-react": "^0.447.0",

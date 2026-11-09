@@ -1,255 +1,176 @@
-import { supabaseClient as supabase } from '../supabaseClient';
-import LZString from 'lz-string';
 import { useCFStore } from '../../zustand/useCFStore';
 import { toast } from 'sonner';
 import { browserAPI } from '../browser/browserDetect';
+import { API_BASE_URL } from '../apiConfig';
 
-let sessionPromise: Promise<any> | null = null;
 const lastSyncedCloudCode = new Map<string, string>();
+const inFlightSaves = new Map<string, { code: string; promise: Promise<boolean> }>();
 
-const getAuthenticatedSession = async () => {
+/**
+ * Checks if the given code differs from the last successfully synced cloud code
+ * and is not already currently being saved with the same content.
+ */
+export const hasCloudCodeChanged = (slug: string, code: string): boolean => {
+    if (lastSyncedCloudCode.get(slug) === code) {
+        return false;
+    }
+    const inFlight = inFlightSaves.get(slug);
+    if (inFlight && inFlight.code === code) {
+        return false;
+    }
+    return true;
+};
+
+/**
+ * Sets the last synced cloud code cache for a slug.
+ */
+export const setLastSyncedCloudCode = (slug: string, code: string) => {
+    lastSyncedCloudCode.set(slug, code);
+};
+
+/**
+ * Retrieves valid authentication token and headers for backend API requests.
+ */
+const getAuthHeaders = async (): Promise<{ headers: Record<string, string>; token: string } | null> => {
     try {
-        const storageRes = await new Promise<any>((resolve) => browserAPI.storage.local.get(['session', 'isLoggedIn', 'isPlusUser'], resolve));
+        const storageRes = await new Promise<any>((resolve) =>
+            browserAPI.storage.local.get(['authToken', 'session', 'isLoggedIn', 'isPlusUser'], resolve)
+        );
+
         const store = useCFStore.getState();
         const isLoggedIn = store.isLoggedIn || storageRes.isLoggedIn;
         const isPlusUser = store.isPlusUser || storageRes.isPlusUser;
-        if (!isLoggedIn || !isPlusUser) return null;
+        const token = storageRes.authToken || storageRes.session?.access_token || localStorage.getItem('authToken');
 
-        if (sessionPromise) return sessionPromise;
-        sessionPromise = (async () => {
-            try {
-                // ALWAYS get the freshest session from Chrome Storage because other tabs/sidepanel might have refreshed it
-                const freshSession = storageRes.session || store.session;
-                
-                if (!freshSession) {
-                    return null;
-                }
+        if (!isLoggedIn || !token) {
+            return null;
+        }
 
-                // Sync Zustand with the freshest storage session
-                useCFStore.getState().setSession(freshSession);
-                useCFStore.getState().setIsLoggedIn(true);
-                useCFStore.getState().setIsPlusUser(true);
-
-                const { data } = await supabase.auth.getSession();
-                
-                // If Supabase client already has this exact session, we're good
-                if (data?.session?.access_token === freshSession.access_token) {
-                    return freshSession;
-                }
-
-                // Only manually setSession if Supabase client lost it but we still have tokens
-                const { error, data: newSessionData } = await supabase.auth.setSession({
-                    access_token: freshSession.access_token,
-                    refresh_token: freshSession.refresh_token
-                });
-
-                if (error) {
-                    console.error("Failed to set Supabase session", error);
-                    return null;
-                }
-                
-                if (newSessionData?.session) {
-                    useCFStore.getState().setSession(newSessionData.session);
-                    browserAPI.storage.local.set({ session: newSessionData.session });
-                    return newSessionData.session;
-                }
-                
-                return freshSession;
-            } catch (err) {
-                console.error("Session error:", err);
-                return null;
-            } finally {
-                sessionPromise = null;
+        return {
+            token,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
             }
-        })();
-        return sessionPromise;
+        };
     } catch (err) {
-        console.error("getAuthenticatedSession error:", err);
+        console.error('[CloudCodeService] Failed to get auth headers:', err);
         return null;
     }
 };
 
 export const handleDowngrade = () => {
-    if (useCFStore.getState().isPlusUser) {
-        useCFStore.getState().setIsPlusUser(false);
-        browserAPI.storage.local.set({ isPlusUser: false });
-        useCFStore.getState().setShowDowngradePopup(true);
-    }
+    useCFStore.getState().setIsPlusUser(false);
+    browserAPI.storage.local.set({ isPlusUser: false });
+    localStorage.setItem('isPlusUser', 'false');
+    useCFStore.getState().setShowDowngradePopup(true);
 };
 
 /**
- * Fetches the compressed code from Supabase and decompresses it.
- * @param slug The problem slug (file_name)
- * @returns The decompressed code string, or null if not found.
+ * Fetches the saved code for a problem slug or template from the backend database.
  */
 export const fetchCloudCode = async (slug: string, showToast: boolean = true): Promise<string | null> => {
     try {
         const store = useCFStore.getState();
         if (!store.isLoggedIn || !store.isPlusUser) return null;
 
-        const session = await getAuthenticatedSession();
-        if (!session?.user) return null;
+        const auth = await getAuthHeaders();
+        if (!auth) return null;
 
-        const { data, error } = await supabase
-            .from('files')
-            .select('content, profiles(tier)')
-            .eq('user_id', session.user.id)
-            .eq('file_name', slug)
-            .maybeSingle();
+        const res = await fetch(`${API_BASE_URL}/code/${encodeURIComponent(slug)}`, {
+            headers: auth.headers
+        });
 
-        if (error) {
-            if (error.message && error.message.includes('row-level security policy')) {
-                handleDowngrade();
-            } else if (error.code !== 'PGRST116') {
-                console.error("Fetch error:", error);
-            }
+        if (res.status === 403) {
+            handleDowngrade();
             return null;
         }
-        if (!data) return null;
 
-        // Verify tier from database against local store state
-        const profileTier = (data as any)?.profiles?.tier;
-        if (profileTier) {
-            if (profileTier !== 'plus' && useCFStore.getState().isPlusUser) {
-                handleDowngrade();
-                return null;
-            } else if (profileTier === 'plus' && !useCFStore.getState().isPlusUser) {
-                useCFStore.getState().setIsPlusUser(true);
-                browserAPI.storage.local.set({ isPlusUser: true });
-            }
+        if (!res.ok) {
+            return null;
         }
 
-        // Return raw compressed payload for direct local storage write
-        if (data.content) {
+        const data = await res.json();
+        if (data && data.content) {
             lastSyncedCloudCode.set(slug, data.content);
             if (showToast && slug !== 'user_template') {
-                toast.success("Loaded code from cloud!", { duration: 2000 });
+                toast.success('Loaded code from cloud!', { duration: 2000 });
             }
+            return data.content;
         }
-        return data.content || null;
+
+        return null;
     } catch (err: any) {
-        console.error("Failed to fetch from cloud", err);
-        if (err.message && err.message.includes('row-level security policy')) {
-            handleDowngrade();
-        }
+        console.error('[CloudCodeService] Failed to fetch code from cloud:', err);
         return null;
     }
 };
 
 /**
- * Gets the total number of files saved in the cloud for the current user.
- * Excludes the user_template file.
+ * Gets the total number of problem codes saved in the cloud (excluding user_template).
  */
 export const getCloudCodeCount = async (): Promise<number> => {
     try {
         const store = useCFStore.getState();
         if (!store.isLoggedIn || !store.isPlusUser) return 0;
 
-        const session = await getAuthenticatedSession();
-        if (!session?.user) return 0;
+        const auth = await getAuthHeaders();
+        if (!auth) return 0;
 
-        const { count, error } = await supabase
-            .from('files')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', session.user.id)
-            .neq('file_name', 'user_template'); // Exclude template from count
+        const res = await fetch(`${API_BASE_URL}/code/count`, {
+            headers: auth.headers
+        });
 
-        if (error) {
-            if (error.message && error.message.includes('row-level security policy')) {
-                handleDowngrade();
-            }
+        if (res.status === 403) {
+            handleDowngrade();
             return 0;
         }
-        return count || 0;
+
+        if (!res.ok) return 0;
+        const data = await res.json();
+        return data?.count || 0;
     } catch (err: any) {
-        console.error("Failed to get cloud code count", err);
-        if (err.message && err.message.includes('row-level security policy')) {
-            handleDowngrade();
-        }
+        console.error('[CloudCodeService] Failed to get cloud code count:', err);
         return 0;
     }
 };
 
 /**
- * Deletes all saved files from the cloud for the current user.
+ * Deletes all saved problem codes from the cloud for the current user.
  */
 export const deleteAllCloudCodes = async (): Promise<boolean> => {
     try {
         const store = useCFStore.getState();
         if (!store.isLoggedIn || !store.isPlusUser) return false;
 
-        const session = await getAuthenticatedSession();
-        if (!session?.user) return false;
+        const auth = await getAuthHeaders();
+        if (!auth) return false;
 
-        const { error } = await supabase
-            .from('files')
-            .delete()
-            .eq('user_id', session.user.id);
+        const res = await fetch(`${API_BASE_URL}/code/all`, {
+            method: 'DELETE',
+            headers: auth.headers
+        });
 
-        if (error) throw error;
-        return true;
-    } catch (err: any) {
-        console.error("Failed to delete all cloud codes", err);
-        if (err.message && err.message.includes('row-level security policy')) {
+        if (res.status === 403) {
             handleDowngrade();
+            return false;
         }
+
+        if (res.ok) {
+            lastSyncedCloudCode.clear();
+            inFlightSaves.clear();
+            return true;
+        }
+
+        return false;
+    } catch (err: any) {
+        console.error('[CloudCodeService] Failed to delete all cloud codes:', err);
         return false;
     }
 };
 
 /**
- * Saves the user's default template to the cloud.
- */
-export const saveCloudTemplate = async (templateCode: string): Promise<boolean> => {
-    try {
-        const store = useCFStore.getState();
-        if (!store.isLoggedIn || !store.isPlusUser) return false;
-
-        const session = await getAuthenticatedSession();
-        if (!session?.user) return false;
-
-        const { data, error } = await supabase.from('files').upsert({
-            user_id: session.user.id,
-            file_name: 'user_template',
-            content: templateCode,
-        }, { onConflict: 'user_id, file_name' })
-        .select('id, profiles(tier)')
-        .single();
-
-        if (error) throw error;
-
-        // Verify tier from database against local store state
-        const profileTier = (data as any)?.profiles?.tier;
-        if (profileTier) {
-            if (profileTier !== 'plus' && useCFStore.getState().isPlusUser) {
-                handleDowngrade();
-                return false;
-            } else if (profileTier === 'plus' && !useCFStore.getState().isPlusUser) {
-                useCFStore.getState().setIsPlusUser(true);
-                browserAPI.storage.local.set({ isPlusUser: true });
-            }
-        }
-
-        toast.success("Successfully saved template to cloud!", { duration: 2000 });
-        return true;
-    } catch (err: any) {
-        console.error("Failed to save template to cloud", err);
-        if (err.message && err.message.includes('row-level security policy')) {
-            handleDowngrade();
-        }
-        return false;
-    }
-};
-
-/**
- * Fetches the user's default template from the cloud.
- */
-export const fetchCloudTemplate = async (): Promise<string | null> => {
-    return fetchCloudCode('user_template', false);
-};
-
-/**
- * Saves a single code snippet to the cloud.
+ * Saves a single code snippet or problem solution to the cloud database.
  */
 export const saveCloudCode = async (slug: string, code: string): Promise<boolean> => {
     try {
@@ -260,169 +181,196 @@ export const saveCloudCode = async (slug: string, code: string): Promise<boolean
             return true;
         }
 
-        const session = await getAuthenticatedSession();
-        if (!session?.user) return false;
+        // Deduplicate simultaneous saves (e.g. blur + tab-switch firing at once)
+        const existingFlight = inFlightSaves.get(slug);
+        if (existingFlight && existingFlight.code === code) {
+            return existingFlight.promise;
+        }
 
-        const { data, error } = await supabase.from('files').upsert({
-            user_id: session.user.id,
-            file_name: slug,
-            content: code,
-        }, { onConflict: 'user_id, file_name' })
-        .select('id, profiles(tier)')
-        .single();
+        const auth = await getAuthHeaders();
+        if (!auth) return false;
 
-        if (error) throw error;
+        const performSave = async (): Promise<boolean> => {
+            try {
+                const res = await fetch(`${API_BASE_URL}/code/save`, {
+                    method: 'POST',
+                    headers: auth.headers,
+                    body: JSON.stringify({ file_name: slug, content: code }),
+                    keepalive: true
+                });
 
-        // Verify tier from database against local store state
-        const profileTier = (data as any)?.profiles?.tier;
-        if (profileTier) {
-            if (profileTier !== 'plus' && useCFStore.getState().isPlusUser) {
-                handleDowngrade();
+                if (res.status === 403) {
+                    handleDowngrade();
+                    return false;
+                }
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    toast.error('Cloud Save Failed: ' + (err.error || 'Server error'));
+                    return false;
+                }
+
+                lastSyncedCloudCode.set(slug, code);
+                return true;
+            } catch (err: any) {
+                console.error('[CloudCodeService] Failed to save cloud code:', err);
                 return false;
-            } else if (profileTier === 'plus' && !useCFStore.getState().isPlusUser) {
-                useCFStore.getState().setIsPlusUser(true);
-                browserAPI.storage.local.set({ isPlusUser: true });
+            } finally {
+                inFlightSaves.delete(slug);
             }
-        }
+        };
 
-        lastSyncedCloudCode.set(slug, code);
-        console.log(`[Cloud Code] Successfully saved code for slug: ${slug}`);
-        return true;
+        const savePromise = performSave();
+        inFlightSaves.set(slug, { code, promise: savePromise });
+        return await savePromise;
     } catch (err: any) {
-        console.error("Failed to save cloud code", err);
-        if (err.message && err.message.includes('row-level security policy')) {
-            handleDowngrade();
-        } else {
-            toast.error("Cloud Save Failed: " + (err.message || JSON.stringify(err)));
-        }
+        console.error('[CloudCodeService] Failed to save cloud code:', err);
         return false;
     }
 };
 
 /**
- * Settings Synchronization Functions
+ * Saves user template to the cloud.
  */
-export const syncSettingsGroupToCloud = async () => {
+export const saveCloudTemplate = async (templateCode: string): Promise<boolean> => {
+    const success = await saveCloudCode('user_template', templateCode);
+    if (success) {
+        toast.success('Successfully saved template to cloud!', { duration: 2000 });
+    }
+    return success;
+};
+
+/**
+ * Fetches user default template from the cloud.
+ */
+export const fetchCloudTemplate = async (): Promise<string | null> => {
+    return fetchCloudCode('user_template', false);
+};
+
+/**
+ * Synchronizes editor and theme settings to the backend database.
+ */
+export const syncSettingsGroupToCloud = async (): Promise<boolean> => {
     try {
         const store = useCFStore.getState();
         if (!store.isLoggedIn || !store.isPlusUser) return false;
 
-        const data = await new Promise<any>(resolve => browserAPI.storage.local.get(['editorSettings', 'shortcutSettings', 'themeCustomSettings', 'changeUI'], resolve));
-        
+        const auth = await getAuthHeaders();
+        if (!auth) return false;
+
+        const data = await new Promise<any>((resolve) =>
+            browserAPI.storage.local.get(['editorSettings', 'shortcutSettings', 'themeCustomSettings', 'changeUI'], resolve)
+        );
+
         const settings = {
             editorSettings: data.editorSettings || JSON.parse(localStorage.getItem('editorSettings') || '{}'),
             shortcutSettings: data.shortcutSettings || JSON.parse(localStorage.getItem('shortcutSettings') || '{}'),
             themeCustomSettings: data.themeCustomSettings || JSON.parse(localStorage.getItem('themeCustomSettings') || '{}'),
             changeUI: data.changeUI || localStorage.getItem('changeUI') || 'true'
         };
-        
-        const session = await getAuthenticatedSession();
-        if (!session) return false;
-        
-        const { data: resData, error } = await supabase.from('profiles').update({ settings }).eq('id', session.user.id).select('tier').single();
-        if (error) throw error;
-        
-        if (resData?.tier !== 'plus' && useCFStore.getState().isPlusUser) {
+
+        const res = await fetch(`${API_BASE_URL}/settings/sync`, {
+            method: 'POST',
+            headers: auth.headers,
+            body: JSON.stringify({ settings })
+        });
+
+        if (res.status === 403) {
             handleDowngrade();
             return false;
-        } else if (resData?.tier === 'plus' && !useCFStore.getState().isPlusUser) {
-            useCFStore.getState().setIsPlusUser(true);
-            browserAPI.storage.local.set({ isPlusUser: true });
         }
 
-        console.log(`[Settings] Synced settings group to cloud`);
-        return true;
+        return res.ok;
     } catch (e: any) {
-        console.error("Failed to sync settings to cloud", e);
-        if (e.message && e.message.includes('row-level security policy')) {
-            handleDowngrade();
-        }
+        console.error('[CloudCodeService] Failed to sync settings to cloud:', e);
         return false;
     }
 };
 
-export const syncSnippetsToCloud = async () => {
+/**
+ * Synchronizes custom snippets to the backend database.
+ */
+export const syncSnippetsToCloud = async (): Promise<boolean> => {
     try {
         const store = useCFStore.getState();
         if (!store.isLoggedIn || !store.isPlusUser) return false;
 
-        const data = await new Promise<any>(resolve => browserAPI.storage.local.get(['customSnippets'], resolve));
+        const auth = await getAuthHeaders();
+        if (!auth) return false;
+
+        const data = await new Promise<any>((resolve) =>
+            browserAPI.storage.local.get(['customSnippets'], resolve)
+        );
+
         const snippets = data.customSnippets || JSON.parse(localStorage.getItem('customSnippets') || '{}');
-        
-        const session = await getAuthenticatedSession();
-        if (!session) return false;
-        
-        const { data: resData, error } = await supabase.from('profiles').update({ snippets }).eq('id', session.user.id).select('tier').single();
-        if (error) throw error;
-        
-        if (resData?.tier !== 'plus' && useCFStore.getState().isPlusUser) {
+
+        const res = await fetch(`${API_BASE_URL}/settings/sync`, {
+            method: 'POST',
+            headers: auth.headers,
+            body: JSON.stringify({ snippets })
+        });
+
+        if (res.status === 403) {
             handleDowngrade();
             return false;
-        } else if (resData?.tier === 'plus' && !useCFStore.getState().isPlusUser) {
-            useCFStore.getState().setIsPlusUser(true);
-            browserAPI.storage.local.set({ isPlusUser: true });
         }
 
-        console.log(`[Settings] Synced snippets to cloud`);
-        return true;
+        return res.ok;
     } catch (e: any) {
-        console.error("Failed to sync snippets to cloud", e);
-        if (e.message && e.message.includes('row-level security policy')) {
-            handleDowngrade();
-        }
+        console.error('[CloudCodeService] Failed to sync snippets to cloud:', e);
         return false;
     }
 };
 
 export const syncAllSettingsToCloud = async () => {
-    await Promise.all([
-        syncSettingsGroupToCloud(),
-        syncSnippetsToCloud()
-    ]);
+    await Promise.all([syncSettingsGroupToCloud(), syncSnippetsToCloud()]);
 };
 
+/**
+ * Fetches settings and custom snippets from the backend database.
+ */
 export const fetchSettingsFromCloud = async () => {
-    const session = await getAuthenticatedSession();
-    if (!session) return null;
-
     try {
-        const { data, error } = await supabase
-            .from('profiles')
-            .select('settings, snippets, tier')
-            .eq('id', session.user.id)
-            .maybeSingle();
+        const auth = await getAuthHeaders();
+        if (!auth) return null;
 
-        if (error && error.code !== 'PGRST116') throw error;
-        
-        if (data) {
-            if (data.tier !== 'plus' && useCFStore.getState().isPlusUser) {
-                handleDowngrade();
-                return null;
-            } else if (data.tier === 'plus' && !useCFStore.getState().isPlusUser) {
-                useCFStore.getState().setIsPlusUser(true);
-                browserAPI.storage.local.set({ isPlusUser: true });
-            }
-        }
-        return data;
-    } catch (err: any) {
-        console.error("Failed to fetch settings from cloud", err);
-        if (err.message && err.message.includes('row-level security policy')) {
+        const res = await fetch(`${API_BASE_URL}/settings`, {
+            headers: auth.headers
+        });
+
+        if (res.status === 403) {
             handleDowngrade();
+            return null;
         }
+
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data || null;
+    } catch (err: any) {
+        console.error('[CloudCodeService] Failed to fetch settings from cloud:', err);
         return null;
     }
 };
 
+/**
+ * Pulls cloud settings and snippets from the database and applies them to local extension state.
+ */
 export const syncSettingsFromCloud = async () => {
     try {
         const data = await fetchSettingsFromCloud();
         if (data) {
             if (data.settings) {
                 if (data.settings.editorSettings) {
-                    useCFStore.getState().setEditorSettings({ ...useCFStore.getState().editorSettings, ...data.settings.editorSettings });
+                    useCFStore.getState().setEditorSettings({
+                        ...useCFStore.getState().editorSettings,
+                        ...data.settings.editorSettings
+                    });
                 }
                 if (data.settings.shortcutSettings) {
-                    useCFStore.getState().setShortcutSettings({ ...useCFStore.getState().shortcutSettings, ...data.settings.shortcutSettings });
+                    useCFStore.getState().setShortcutSettings({
+                        ...useCFStore.getState().shortcutSettings,
+                        ...data.settings.shortcutSettings
+                    });
                 }
                 if (data.settings.themeCustomSettings) {
                     localStorage.setItem('themeCustomSettings', JSON.stringify(data.settings.themeCustomSettings));
@@ -438,11 +386,12 @@ export const syncSettingsFromCloud = async () => {
                 localStorage.setItem('customSnippets', JSON.stringify(data.snippets));
                 browserAPI.storage.local.set({ customSnippets: data.snippets });
             }
-            console.log("[Settings] Successfully fetched and applied settings from cloud", data);
         }
 
         // Fetch user template from cloud and sync to local storage
-        const storageRes = await new Promise<any>((resolve) => browserAPI.storage.local.get(['isLoggedIn', 'isPlusUser'], resolve));
+        const storageRes = await new Promise<any>((resolve) =>
+            browserAPI.storage.local.get(['isLoggedIn', 'isPlusUser'], resolve)
+        );
         const isLoggedIn = useCFStore.getState().isLoggedIn || storageRes.isLoggedIn;
         const isPlusUser = useCFStore.getState().isPlusUser || storageRes.isPlusUser;
 
@@ -451,13 +400,11 @@ export const syncSettingsFromCloud = async () => {
             if (cloudTemplate) {
                 localStorage.setItem('template', cloudTemplate);
                 browserAPI.storage.local.set({ template: cloudTemplate });
-                console.log("[Settings] Successfully fetched template from cloud");
             }
         }
 
-        // Mark that we have successfully synced at least once in this browser
         browserAPI.storage.local.set({ hasSyncedFromCloud: true });
     } catch (e) {
-        console.error("Failed to sync settings from cloud", e);
+        console.error('[CloudCodeService] Failed to sync settings from cloud:', e);
     }
 };

@@ -1,7 +1,7 @@
 import { useCFStore } from '../../zustand/useCFStore';
 import { getSlug, getCodeMap } from '../helper';
 import { saveCodeForSlug, saveTestCaseForSlug } from '../services/storageService';
-import { fetchCloudCode } from '../services/cloudCodeService';
+import { fetchCloudCode, setLastSyncedCloudCode } from '../services/cloudCodeService';
 import { loadCodeWithCursor } from '../codeHandlers';
 import { accessRestrictionMessage } from '../../data/constants';
 import { useTestCases } from './useTestCases';
@@ -43,6 +43,10 @@ export const useTabEvents = () => {
 
                 if (newSlug) {
                     let codeForUrl = getCodeMap().get(newSlug)?.code || '';
+
+                    if (codeForUrl) {
+                        setLastSyncedCloudCode(newSlug, codeForUrl);
+                    }
 
                     if (!codeForUrl && useCFStore.getState().isPlusUser) {
                         const cloudCode = await fetchCloudCode(newSlug);

@@ -23,6 +23,7 @@ const ShortcutSettingsComponent: React.FC<ShortcutSettingsProps> = ({ isOpen, on
     const [recordingFor, setRecordingFor] = useState<'run' | 'submit' | 'reset' | 'format' | null>(null);
     const pressedKeysRef = useRef<Set<string>>(new Set());
     const { getShortcutSettings, saveShortcutSettings } = useShortcutSettings(localShortcutSettings, setStoreShortcutSettings);
+    const isPlusUser = useCFStore(state => state.isPlusUser);
 
     const rows: {
         id: "run" | "submit" | "reset" | "format";

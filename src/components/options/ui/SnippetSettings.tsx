@@ -120,6 +120,7 @@ const SnippetSettings: React.FC<SnippetSettingsProps> = ({ isOpen, onClose }) =>
     const [mounted, setMounted] = useState(false);
     const language = useCFStore(state => state.language);
     const { customSnippets, saveCustomSnippets } = useCustomSnippets();
+    const isPlusUser = useCFStore(state => state.isPlusUser);
     const [localSnippets, setLocalSnippets] = useState<CustomSnippet[]>([]);
 
     useEffect(() => {
@@ -152,6 +153,9 @@ const SnippetSettings: React.FC<SnippetSettingsProps> = ({ isOpen, onClose }) =>
     }, [isOpen, onClose]);
 
     const handleAddSnippet = () => {
+        if (!isPlusUser) {
+            return;
+        }
         setLocalSnippets([
             ...localSnippets,
             { id: Date.now().toString(), keyword: '', code: '' }
@@ -176,6 +180,9 @@ const SnippetSettings: React.FC<SnippetSettingsProps> = ({ isOpen, onClose }) =>
     };
 
     const saveChangesToStore = (snippetsToSave: CustomSnippet[]) => {
+        if (!isPlusUser) {
+            return;
+        }
         const validSnippets = snippetsToSave.filter(s => s.keyword.trim() !== '' && s.code.trim() !== '');
         const newSnippets = {
             ...customSnippets,

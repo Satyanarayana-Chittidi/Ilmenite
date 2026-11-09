@@ -1,3 +1,5 @@
+import UpgradePopup from '../../global/popups/UpgradePopup';
+import PremiumLockIcon from '../../global/icons/PremiumLockIcon';
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,6 +30,9 @@ const EditorSettings: React.FC<EditorSettingsProps> = ({ isOpen, onClose, theme 
     const { getEditorSettings, handleToggle, saveEditorSettings } = useEditorSettings(editorSettings, setEditorSettings);
     const language = useCFStore(state => state.language);
     const fontSize = useCFStore(state => state.fontSize);
+    const isPlusUser = useCFStore(state => state.isPlusUser);
+    const [showUpgradePopup, setShowUpgradePopup] = useState(false);
+    const [upgradeFeatureName, setUpgradeFeatureName] = useState('');
 
     useEffect(() => {
         setMounted(true);
@@ -80,7 +85,8 @@ const EditorSettings: React.FC<EditorSettingsProps> = ({ isOpen, onClose, theme 
     if (!mounted) return null;
 
     return createPortal(
-        <AnimatePresence>
+        <>
+            <AnimatePresence>
             {isOpen && (
                 <motion.div
                     className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99999] flex items-center justify-center p-4"
@@ -307,7 +313,10 @@ const EditorSettings: React.FC<EditorSettingsProps> = ({ isOpen, onClose, theme 
 
                                         <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-[#222222] hover:bg-gray-100 dark:hover:bg-[#252525] transition-colors">
                                             <div className="flex-1 pr-4">
-                                                <h4 className="text-gray-700 dark:text-gray-300 font-medium text-sm">Keybinding</h4>
+                                                <h4 className="text-gray-700 dark:text-gray-300 font-medium text-sm flex items-center gap-1.5">
+                                                    Keybinding
+                                                    {!isPlusUser && <PremiumLockIcon size={12} className="text-amber-500" />}
+                                                </h4>
                                                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                                                     Keybinding to use in the editor
                                                 </p>
@@ -316,12 +325,21 @@ const EditorSettings: React.FC<EditorSettingsProps> = ({ isOpen, onClose, theme 
                                                 <PremiumSelect
                                                     value={editorSettings.keyBinding || "standard"}
                                                     onChange={(selected) => {
+                                                        if (selected === "vim" && !isPlusUser) {
+                                                            setUpgradeFeatureName("Vim Keybindings");
+                                                            setShowUpgradePopup(true);
+                                                            return;
+                                                        }
                                                         setEditorSettings({ ...editorSettings, keyBinding: selected as KeyBinding })
+                                                    }}
+                                                    onLockedClick={() => {
+                                                        setUpgradeFeatureName("Vim Keybindings");
+                                                        setShowUpgradePopup(true);
                                                     }}
                                                     className="w-full sm:w-32"
                                                     options={[
                                                         { value: "standard", label: "Standard" },
-                                                        { value: "vim", label: "Vim" }
+                                                        { value: "vim", label: "Vim", isLocked: !isPlusUser }
                                                     ]}
                                                 />
                                             </div>
@@ -395,7 +413,9 @@ const EditorSettings: React.FC<EditorSettingsProps> = ({ isOpen, onClose, theme 
                     </motion.div>
                 </motion.div>
             )}
-        </AnimatePresence>,
+            </AnimatePresence>
+            <UpgradePopup isOpen={showUpgradePopup} onClose={() => setShowUpgradePopup(false)} featureName={upgradeFeatureName || "Vim Keybindings"} />
+        </>,
         document.body
     );
 };
