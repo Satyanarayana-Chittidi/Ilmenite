@@ -15,8 +15,7 @@ import {
     getCodeCount,
     deleteAllCodes,
     syncSettings,
-    getSettings,
-    logSubmission
+    getSettings
 } from '../controllers/codeController.js';
 import { runCode } from '../controllers/executionController.js';
 import {
@@ -54,7 +53,6 @@ router.delete('/code/all', authenticateToken, deleteAllCodes);
 router.get('/code/:slug', authenticateToken, getCodeBySlug);
 router.post('/settings/sync', authenticateToken, syncSettings);
 router.get('/settings', authenticateToken, getSettings);
-router.post('/code/submit-log', authenticateToken, logSubmission);
 
 // --- Payment & Subscription Routes ---
 router.post('/payment/create-subscription', createSubscription);

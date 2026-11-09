@@ -218,27 +218,4 @@ export const getSettings = async (req: AuthenticatedRequest, res: Response): Pro
     }
 };
 
-/**
- * Record a submission log (only when user clicks Submit)
- */
-export const logSubmission = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-    try {
-        const userId = req.user?.id;
-        const { problem_slug, language, verdict } = req.body;
 
-        if (!userId || !problem_slug || !language) {
-            res.status(400).json({ error: 'problem_slug and language are required' });
-            return;
-        }
-
-        await pool.query(
-            'INSERT INTO submission_logs (user_id, problem_slug, language, verdict) VALUES (?, ?, ?, ?)',
-            [userId, problem_slug, language, verdict || 'Submitted']
-        );
-
-        res.json({ success: true });
-    } catch (error: any) {
-        console.error('[Submission Log Error]:', error);
-        res.status(500).json({ error: 'Failed to log submission: ' + error.message });
-    }
-};

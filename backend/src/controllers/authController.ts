@@ -5,6 +5,15 @@ import crypto from 'crypto';
 import { pool } from '../config/db.js';
 import { AuthenticatedRequest } from '../middleware/authMiddleware.js';
 
+interface PendingOtp {
+    otp: string;
+    expiresAt: number;
+    purpose: string;
+}
+
+// In-memory OTP cache with TTL (identical to Organova pattern - no SQL table needed)
+const pendingOtps = new Map<string, PendingOtp>();
+
 const generateToken = (user: { id: string; email: string; tier: string }) => {
     const secret = process.env.JWT_SECRET || 'super_secret_ilmenite_jwt_key_2026';
     const expiresIn = process.env.JWT_EXPIRES_IN || '30d';
@@ -36,12 +45,12 @@ export const sendOtp = async (req: AuthenticatedRequest, res: Response): Promise
         // Generate 6-digit cryptographic OTP
         const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // Expire in 10 minutes
-        await pool.query(
-            `INSERT INTO email_otps (email, otp_code, purpose, expires_at)
-             VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 10 MINUTE))`,
-            [normalizedEmail, otpCode, purpose]
-        );
+        // Expire in 10 minutes (TTL cached in memory)
+        pendingOtps.set(normalizedEmail, {
+            otp: otpCode,
+            expiresAt: Date.now() + 10 * 60 * 1000,
+            purpose
+        });
 
         console.log(`\n======================================================`);
         console.log(`🔑 [AUTH OTP] Verification code for ${normalizedEmail}: ${otpCode}`);
@@ -49,7 +58,8 @@ export const sendOtp = async (req: AuthenticatedRequest, res: Response): Promise
 
         res.json({
             success: true,
-            message: `Verification code sent to ${normalizedEmail}`
+            message: `Verification code sent to ${normalizedEmail}`,
+            devOtp: process.env.NODE_ENV !== 'production' ? otpCode : undefined
         });
     } catch (error: any) {
         console.error('[Send OTP Error]:', error);
@@ -82,21 +92,20 @@ export const registerWithOtp = async (req: AuthenticatedRequest, res: Response):
         const normalizedEmail = email.toLowerCase().trim();
         const trimmedOtp = otp.toString().trim();
 
-        // Check OTP validity
-        const [otpRows]: any = await pool.query(
-            `SELECT id FROM email_otps 
-             WHERE email = ? AND otp_code = ? AND purpose = 'registration' AND expires_at > NOW()
-             ORDER BY created_at DESC LIMIT 1`,
-            [normalizedEmail, trimmedOtp]
-        );
+        // Check OTP validity from cache
+        const pendingRecord = pendingOtps.get(normalizedEmail);
+        if (!pendingRecord || pendingRecord.expiresAt < Date.now() || pendingRecord.purpose !== 'registration') {
+            res.status(400).json({ error: 'Verification code has expired or was not requested. Please request a new code.' });
+            return;
+        }
 
-        if (otpRows.length === 0) {
-            res.status(400).json({ error: 'Invalid or expired verification code' });
+        if (pendingRecord.otp !== trimmedOtp) {
+            res.status(400).json({ error: 'Invalid verification code' });
             return;
         }
 
         // Delete used OTP
-        await pool.query('DELETE FROM email_otps WHERE email = ?', [normalizedEmail]);
+        pendingOtps.delete(normalizedEmail);
 
         // Check if user registered in the meantime
         const [existing]: any = await pool.query('SELECT id FROM users WHERE email = ?', [normalizedEmail]);

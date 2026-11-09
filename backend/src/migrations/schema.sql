@@ -43,23 +43,6 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     CONSTRAINT fk_subscriptions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS email_otps (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(255) NOT NULL,
-    otp_code VARCHAR(6) NOT NULL,
-    purpose VARCHAR(32) NOT NULL DEFAULT 'registration', -- 'registration', 'reset'
-    expires_at TIMESTAMP NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_email_otp (email, otp_code)
-);
 
-CREATE TABLE IF NOT EXISTS submission_logs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id VARCHAR(64) NOT NULL,
-    problem_slug VARCHAR(128) NOT NULL,
-    language VARCHAR(32) NOT NULL,
-    verdict VARCHAR(64) NOT NULL DEFAULT 'Submitted',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_submissions_user (user_id),
-    CONSTRAINT fk_submissions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
+
+
