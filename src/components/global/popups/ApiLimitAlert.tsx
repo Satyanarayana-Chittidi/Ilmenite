@@ -28,12 +28,12 @@ const ApiLimitAlert: React.FC<ApiLimitAlertProps> = ({ isOpen, setIsOpen }: ApiL
           <p className="mt-4">
             If you have questions, feedback, or believe you've received this message in error, please{" "}
             <a
-              href="https://github.com/MaanasSehgal/ilmenite/issues"
+              href="https://chromewebstore.google.com/detail/ilmenite/oanffehmigchhkjfeccpdkmmonpbbapc"
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
             >
-              create an issue on GitHub
+              visit our Chrome Web Store page
             </a>
             . We appreciate your understanding.
           </p>

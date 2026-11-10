@@ -18,7 +18,7 @@ Code Editor Access:
 
 • If you find any issues, please feel free
   to report the issue at:
-  https://github.com/MaanasSehgal/ilmenite/issues
+  https://chromewebstore.google.com/detail/ilmenite/oanffehmigchhkjfeccpdkmmonpbbapc
 */
 `;
 

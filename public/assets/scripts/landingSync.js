@@ -64,7 +64,7 @@ if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
 
     // Listen for logout request from landing page
     window.addEventListener('message', (event) => {
-        const trustedOrigins = ['https://ilmenite.vercel.app', 'https://ilmenite.app', window.location.origin];
+        const trustedOrigins = ['https://ilmenite.vercel.app'];
         if (!trustedOrigins.includes(event.origin) && event.origin !== '') return;
 
         if (event.data && event.data.type === 'EXTENSION_LOGOUT_REQUEST') {
