@@ -297,16 +297,6 @@ const AccountBar: React.FC<AccountBarProps> = () => {
                                     {isPlusUser ? 'Cancel Subscription' : 'Upgrade'}
                                 </button>
                             </div>
-                            <div className="mt-2 pt-2 border-t border-black/5 dark:border-white/10 flex justify-center">
-                                <a
-                                    href="https://chromewebstore.google.com/detail/ilmenite/oanffehmigchhkjfeccpdkmmonpbbapc"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-[11px] text-gray-500 hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-400 transition-colors flex items-center gap-1"
-                                >
-                                    Rate on Chrome Web Store ⭐
-                                </a>
-                            </div>
                         </div>
                     ) : null
                 }
