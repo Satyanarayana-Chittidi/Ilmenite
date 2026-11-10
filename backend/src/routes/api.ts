@@ -7,7 +7,8 @@ import {
     getMe,
     updateAvatar,
     getGitHubOAuthUrl,
-    handleGitHubCallback
+    handleGitHubCallback,
+    handleGitHubGetCallback
 } from '../controllers/authController.js';
 import {
     saveCode,
@@ -39,6 +40,7 @@ router.post('/auth/register', registerWithOtp);
 router.post('/auth/login', login);
 router.post('/auth/oauth-sync', oauthSync);
 router.get('/auth/github/url', getGitHubOAuthUrl);
+router.get('/auth/github/callback', handleGitHubGetCallback);
 router.post('/auth/github/callback', handleGitHubCallback);
 router.post('/auth/avatar', authenticateToken, updateAvatar);
 router.get('/auth/me', authenticateToken, getMe);

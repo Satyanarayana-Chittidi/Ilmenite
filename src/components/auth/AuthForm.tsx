@@ -238,6 +238,15 @@ export const AuthForm: React.FC = () => {
 
                     try {
                         const url = new URL(callbackUrl);
+                        const directToken = url.searchParams.get('token');
+                        const directUserStr = url.searchParams.get('user');
+
+                        if (directToken && directUserStr) {
+                            const directUser = JSON.parse(decodeURIComponent(directUserStr));
+                            await saveSessionAndInit(directToken, directUser);
+                            return;
+                        }
+
                         const code = url.searchParams.get('code');
                         if (!code) throw new Error("No authorization code received from GitHub.");
 
@@ -290,7 +299,7 @@ export const AuthForm: React.FC = () => {
                     onClick={() => switchMode('login')}
                     className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${
                         mode === 'login'
-                            ? 'bg-[#8b5cf6] text-white shadow-lg'
+                            ? 'bg-[#3b82f6] text-white shadow-lg shadow-blue-500/25'
                             : 'text-[#94a3b8] hover:text-white'
                     }`}
                 >
@@ -301,7 +310,7 @@ export const AuthForm: React.FC = () => {
                     onClick={() => switchMode('signup')}
                     className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${
                         mode === 'signup'
-                            ? 'bg-[#8b5cf6] text-white shadow-lg'
+                            ? 'bg-[#3b82f6] text-white shadow-lg shadow-blue-500/25'
                             : 'text-[#94a3b8] hover:text-white'
                     }`}
                 >
@@ -335,7 +344,7 @@ export const AuthForm: React.FC = () => {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="name@example.com"
-                                className="w-full pl-10 pr-3.5 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-[#64748b] focus:outline-none focus:border-[#8b5cf6] focus:ring-1 focus:ring-[#8b5cf6] transition-all"
+                                className="w-full pl-10 pr-3.5 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-[#64748b] focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6] transition-all"
                             />
                         </div>
                     </div>
@@ -350,7 +359,7 @@ export const AuthForm: React.FC = () => {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="Enter your password"
-                                className="w-full pl-10 pr-10 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-[#64748b] focus:outline-none focus:border-[#8b5cf6] focus:ring-1 focus:ring-[#8b5cf6] transition-all"
+                                className="w-full pl-10 pr-10 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-[#64748b] focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6] transition-all"
                             />
                             <button
                                 type="button"
@@ -365,7 +374,7 @@ export const AuthForm: React.FC = () => {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full mt-2 py-2.5 bg-[#8b5cf6] hover:bg-[#7c3aed] text-white font-medium text-sm rounded-lg transition-all shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:shadow-[0_0_25px_rgba(139,92,246,0.5)] disabled:opacity-50"
+                        className="w-full mt-2 py-2.5 bg-[#3b82f6] hover:bg-[#2563eb] text-white font-medium text-sm rounded-lg transition-all shadow-[0_0_20px_rgba(59,130,246,0.35)] hover:shadow-[0_0_25px_rgba(59,130,246,0.55)] disabled:opacity-50"
                     >
                         {isLoading ? 'Signing In...' : 'Sign In'}
                     </button>
@@ -385,7 +394,7 @@ export const AuthForm: React.FC = () => {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="name@example.com"
-                                className="w-full pl-10 pr-3.5 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-[#64748b] focus:outline-none focus:border-[#8b5cf6] focus:ring-1 focus:ring-[#8b5cf6] transition-all"
+                                className="w-full pl-10 pr-3.5 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-[#64748b] focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6] transition-all"
                             />
                         </div>
                     </div>
@@ -401,7 +410,7 @@ export const AuthForm: React.FC = () => {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="Create a password"
-                                className="w-full pl-10 pr-10 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-[#64748b] focus:outline-none focus:border-[#8b5cf6] focus:ring-1 focus:ring-[#8b5cf6] transition-all"
+                                className="w-full pl-10 pr-10 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-[#64748b] focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6] transition-all"
                             />
                             <button
                                 type="button"
@@ -424,7 +433,7 @@ export const AuthForm: React.FC = () => {
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 placeholder="Confirm your password"
-                                className="w-full pl-10 pr-3.5 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-[#64748b] focus:outline-none focus:border-[#8b5cf6] focus:ring-1 focus:ring-[#8b5cf6] transition-all"
+                                className="w-full pl-10 pr-3.5 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-[#64748b] focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6] transition-all"
                             />
                         </div>
                     </div>
@@ -432,7 +441,7 @@ export const AuthForm: React.FC = () => {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full mt-2 py-2.5 bg-[#8b5cf6] hover:bg-[#7c3aed] text-white font-medium text-sm rounded-lg transition-all shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:shadow-[0_0_25px_rgba(139,92,246,0.5)] disabled:opacity-50"
+                        className="w-full mt-2 py-2.5 bg-[#3b82f6] hover:bg-[#2563eb] text-white font-medium text-sm rounded-lg transition-all shadow-[0_0_20px_rgba(59,130,246,0.35)] hover:shadow-[0_0_25px_rgba(59,130,246,0.55)] disabled:opacity-50"
                     >
                         {isLoading ? 'Sending Code...' : 'Send Verification Code'}
                     </button>
@@ -463,7 +472,7 @@ export const AuthForm: React.FC = () => {
                                 value={otp}
                                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                                 placeholder="123456"
-                                className="w-full pl-10 pr-3.5 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-center text-lg tracking-[0.3em] font-mono focus:outline-none focus:border-[#8b5cf6] focus:ring-1 focus:ring-[#8b5cf6] transition-all"
+                                className="w-full pl-10 pr-3.5 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-center text-lg tracking-[0.3em] font-mono focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6] transition-all"
                             />
                         </div>
                     </div>
@@ -474,7 +483,7 @@ export const AuthForm: React.FC = () => {
                             type="button"
                             disabled={countdown > 0 || isLoading}
                             onClick={handleSendOtp}
-                            className="text-[#8b5cf6] hover:underline disabled:text-[#64748b] disabled:no-underline font-medium"
+                            className="text-[#3b82f6] hover:underline disabled:text-[#64748b] disabled:no-underline font-medium"
                         >
                             {countdown > 0 ? `Resend in ${countdown}s` : 'Resend Code'}
                         </button>
@@ -483,7 +492,7 @@ export const AuthForm: React.FC = () => {
                     <button
                         type="submit"
                         disabled={isLoading || otp.length !== 6}
-                        className="w-full py-2.5 bg-[#8b5cf6] hover:bg-[#7c3aed] text-white font-medium text-sm rounded-lg transition-all shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:shadow-[0_0_25px_rgba(139,92,246,0.5)] disabled:opacity-50"
+                        className="w-full py-2.5 bg-[#3b82f6] hover:bg-[#2563eb] text-white font-medium text-sm rounded-lg transition-all shadow-[0_0_20px_rgba(59,130,246,0.35)] hover:shadow-[0_0_25px_rgba(59,130,246,0.55)] disabled:opacity-50"
                     >
                         {isLoading ? 'Verifying...' : 'Verify & Create Account'}
                     </button>

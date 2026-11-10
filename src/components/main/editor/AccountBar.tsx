@@ -163,7 +163,7 @@ const AccountBar: React.FC<AccountBarProps> = () => {
                 
                 {isUploading ? (
                     <div className="absolute -inset-[2px] animate-spin pointer-events-none">
-                        <svg className="w-full h-full text-[#8b5cf6]" viewBox="0 0 100 100">
+                        <svg className="w-full h-full text-[#3b82f6]" viewBox="0 0 100 100">
                             <circle 
                                 cx="50" cy="50" r="46" 
                                 fill="none" 

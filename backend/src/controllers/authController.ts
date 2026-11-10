@@ -326,8 +326,98 @@ export const getGitHubOAuthUrl = async (req: Request, res: Response): Promise<vo
         return;
     }
 
-    const url = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri || '')}&scope=user:email`;
+    const host = req.get('host') || 'ilmenite.onrender.com';
+    const protocol = req.protocol === 'https' || host.includes('render') ? 'https' : req.protocol;
+    const serverCallback = `${protocol}://${host}/api/auth/github/callback`;
+    const useRelay = req.query.relay === 'true';
+    const callbackTarget = useRelay ? serverCallback : (redirectUri || serverCallback);
+    const stateParam = redirectUri ? `&state=${encodeURIComponent(redirectUri)}` : '';
+
+    const url = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(callbackTarget)}&scope=user:email${stateParam}`;
     res.json({ url });
+};
+
+/**
+ * GET callback handler for GitHub OAuth relay (handles direct browser redirect from GitHub)
+ */
+export const handleGitHubGetCallback = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const code = req.query.code as string;
+        const state = req.query.state as string;
+        const clientId = process.env.GITHUB_CLIENT_ID;
+        const clientSecret = process.env.GITHUB_CLIENT_SECRET;
+
+        if (!clientId || !clientSecret || !code) {
+            res.status(400).send('<h3>GitHub OAuth configuration error or missing authorization code.</h3>');
+            return;
+        }
+
+        const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ client_id: clientId, client_secret: clientSecret, code })
+        });
+        const tokenData = await tokenRes.json();
+        if (!tokenData.access_token) {
+            res.status(400).send(`<h3>Failed to obtain access token from GitHub: ${tokenData.error_description || tokenData.error || 'Unknown error'}</h3>`);
+            return;
+        }
+
+        const userRes = await fetch('https://api.github.com/user', {
+            headers: { 'Authorization': `Bearer ${tokenData.access_token}`, 'User-Agent': 'Ilmenite-App' }
+        });
+        const ghUser = await userRes.json();
+
+        let email = ghUser.email;
+        if (!email) {
+            const emailRes = await fetch('https://api.github.com/user/emails', {
+                headers: { 'Authorization': `Bearer ${tokenData.access_token}`, 'User-Agent': 'Ilmenite-App' }
+            });
+            const emails = await emailRes.json();
+            if (Array.isArray(emails)) {
+                const primary = emails.find((e: any) => e.primary && e.verified);
+                email = primary ? primary.email : emails[0]?.email;
+            }
+        }
+
+        if (!email) {
+            res.status(400).send('<h3>Unable to retrieve verified email from GitHub account.</h3>');
+            return;
+        }
+
+        const normalizedEmail = email.toLowerCase().trim();
+        const avatarUrl = ghUser.avatar_url || null;
+        const userId = crypto.randomUUID();
+
+        await pool.query(
+            `INSERT INTO users (id, email, avatar_url, tier)
+             VALUES (?, ?, ?, 'free')
+             ON DUPLICATE KEY UPDATE
+             avatar_url = COALESCE(VALUES(avatar_url), avatar_url),
+             updated_at = CURRENT_TIMESTAMP`,
+            [userId, normalizedEmail, avatarUrl]
+        );
+
+        const [rows]: any = await pool.query('SELECT id, email, tier, avatar_url FROM users WHERE email = ?', [normalizedEmail]);
+        const user = rows[0];
+        const token = generateToken(user);
+
+        if (state && (state.startsWith('https://') || state.startsWith('http://'))) {
+            const target = new URL(state);
+            target.searchParams.set('token', token);
+            target.searchParams.set('user', JSON.stringify(user));
+            res.redirect(target.toString());
+            return;
+        }
+
+        res.json({ message: 'GitHub login successful', token, user });
+    } catch (err: any) {
+        console.error('[GitHub GET Callback Error]:', err);
+        res.status(500).send('<h3>GitHub login failed: ' + err.message + '</h3>');
+    }
 };
 
 /**
