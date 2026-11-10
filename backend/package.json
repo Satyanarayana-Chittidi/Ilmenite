@@ -7,11 +7,9 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "init-db": "tsx src/scripts/initDb.ts",
-    "migrate-supabase": "tsx src/scripts/migrateSupabase.ts"
+    "init-db": "tsx src/scripts/initDb.ts"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.119.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
