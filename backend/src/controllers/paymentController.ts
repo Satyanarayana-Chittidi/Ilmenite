@@ -23,16 +23,26 @@ export const createSubscription = async (req: Request, res: Response): Promise<v
     try {
         let uid = req.body.uid || (req as AuthenticatedRequest).user?.id;
         const email = req.body.email;
+        const normalizedEmail = email ? email.toLowerCase().trim() : null;
 
-        // If email provided without uid, find or create the user in database
-        if (!uid && email) {
-            const normalizedEmail = email.toLowerCase().trim();
+        // Ensure user exists in the `users` table to satisfy foreign key fk_subscriptions_user
+        if (normalizedEmail) {
             const [existing]: any = await pool.query('SELECT id FROM users WHERE email = ?', [normalizedEmail]);
             if (existing.length > 0) {
                 uid = existing[0].id;
+            } else if (uid) {
+                await pool.query(
+                    'INSERT INTO users (id, email, tier) VALUES (?, ?, "free") ON DUPLICATE KEY UPDATE email = VALUES(email)',
+                    [uid, normalizedEmail]
+                );
             } else {
                 uid = crypto.randomUUID();
                 await pool.query('INSERT INTO users (id, email, tier) VALUES (?, ?, "free")', [uid, normalizedEmail]);
+            }
+        } else if (uid) {
+            const [existing]: any = await pool.query('SELECT id FROM users WHERE id = ?', [uid]);
+            if (existing.length === 0) {
+                await pool.query('INSERT INTO users (id, email, tier) VALUES (?, ?, "free")', [uid, `${uid}@ilmenite.user`]);
             }
         }
 
@@ -82,7 +92,8 @@ export const createSubscription = async (req: Request, res: Response): Promise<v
         res.json({
             id: subscription.id,
             subscription_id: subscription.id,
-            short_url: subscription.short_url
+            short_url: subscription.short_url,
+            key_id: process.env.RAZORPAY_KEY_ID || 'rzp_live_Ty5kKoihqqxX9T'
         });
     } catch (error: any) {
         console.error('[Payment Create Sub Error]:', error);
