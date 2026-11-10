@@ -82,10 +82,10 @@ const Settings: React.FC<SettingsProps> = ({ setShowOptions, theme, setTheme }) 
                 setOpenConfirmationPopup={setOpenConfirmationPopup}
             />
 
-            <div className="Settings-container w-full h-full flex flex-col items-center justify-center dark:bg-[#111111]">
+            <div className="Settings-container w-full h-full flex flex-col items-center justify-between dark:bg-[#111111]">
                 <SettingsTopBar theme={theme} setShowOptions={setShowOptions} />
 
-                <div className="w-full h-full overflow-y-auto px-4">
+                <div className="w-full flex-1 min-h-0 overflow-y-auto px-4">
                     <Options
                         theme={theme}
                         setTheme={setTheme}
@@ -141,7 +141,7 @@ const Settings: React.FC<SettingsProps> = ({ setShowOptions, theme, setTheme }) 
                                 </button>
                             </div>
                         </div>
-                        <div className="text-left mt-2 mb-20 w-full h-[28rem] relative">
+                        <div className="text-left mt-2 mb-6 w-full h-[28rem] relative">
                             <CodeEditor
                                 monacoInstanceRef={monacoInstanceRef}
                                 language={language}
@@ -151,8 +151,9 @@ const Settings: React.FC<SettingsProps> = ({ setShowOptions, theme, setTheme }) 
                             />
                         </div>
                     </div>
-                    <Footer />
                 </div>
+
+                <Footer />
             </div>
             <UpgradePopup isOpen={showUpgradePopup} onClose={() => setShowUpgradePopup(false)} featureName={upgradeFeatureName || "Cloud Template Sync"} />
         </>
