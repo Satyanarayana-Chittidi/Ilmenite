@@ -56,6 +56,15 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Serve landing page statically
 app.use(express.static(landingPath));
 
+// Lightweight health check & root endpoints for uptime monitoring (e.g. UptimeRobot)
+app.get('/health', (_req, res) => {
+    res.json({ status: 'ok', service: 'Ilmenite Backend', timestamp: new Date().toISOString() });
+});
+
+app.get('/', (_req, res) => {
+    res.json({ status: 'ok', service: 'Ilmenite Backend', message: 'API is running' });
+});
+
 // Mount API routes
 app.use('/api', apiRoutes);
 
