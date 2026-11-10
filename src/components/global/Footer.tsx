@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, Globe, Linkedin, Github } from 'lucide-react';
+import { Star, Globe, Linkedin, Github, Heart } from 'lucide-react';
 
 interface FooterProps {
     className?: string;
@@ -19,9 +19,9 @@ const openLink = (url: string) => {
 
 const Footer: React.FC<FooterProps> = ({ className = '' }) => {
     return (
-        <div className={`w-full mt-6 pt-4 pb-6 px-2 border-t border-gray-200/80 dark:border-zinc-800/80 select-none text-xs ${className}`}>
+        <div className={`w-full mt-3 pt-2.5 pb-2.5 px-2 border-t border-gray-200/80 dark:border-zinc-800/80 select-none text-xs ${className}`}>
             {/* Row 1: Extension Name & Version + Rate & Website */}
-            <div className="flex flex-wrap items-center justify-between gap-2.5 pb-2.5">
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-2">
                 <div className="flex items-center gap-2">
                     <span className="font-bold text-gray-800 dark:text-zinc-200 text-sm tracking-tight">
                         Ilmenite
@@ -52,36 +52,37 @@ const Footer: React.FC<FooterProps> = ({ className = '' }) => {
                 </div>
             </div>
 
-            {/* Row 2: Socials (LinkedIn, GitHub) + Attribution Credits */}
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px]">
-                <div className="flex items-center gap-3">
+            {/* Row 2: Socials (LinkedIn, GitHub) in matching pill style + Attribution Credits */}
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5 text-[11px]">
+                <div className="flex items-center gap-2">
                     <button
                         onClick={() => openLink('https://www.linkedin.com/in/satyanarayana-chittidi')}
                         title="Connect with Satyanarayana Chittidi on LinkedIn"
-                        className="flex items-center gap-1.5 text-gray-600 dark:text-zinc-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors cursor-pointer"
+                        className="group flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 transition-all duration-150 cursor-pointer"
                     >
-                        <Linkedin size={13} className="text-blue-500" />
+                        <Linkedin size={13} className="text-blue-500 group-hover:scale-110 transition-transform" />
                         <span>LinkedIn</span>
                     </button>
 
                     <button
                         onClick={() => openLink('https://github.com/Satyanarayana-Chittidi/Ilmenite')}
                         title="View Ilmenite GitHub Repository"
-                        className="flex items-center gap-1.5 text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+                        className="group flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-gray-700 dark:text-zinc-300 bg-gray-500/10 hover:bg-gray-500/20 dark:bg-zinc-800 dark:hover:bg-zinc-700 transition-all duration-150 cursor-pointer"
                     >
-                        <Github size={13} />
+                        <Github size={13} className="text-gray-700 dark:text-zinc-300 group-hover:scale-110 transition-transform" />
                         <span>GitHub</span>
                     </button>
                 </div>
 
-                <div className="flex items-center gap-1 text-[10px] text-gray-400 dark:text-zinc-500">
+                <div className="flex items-center gap-1.5 text-[10.5px] text-gray-500 dark:text-zinc-400">
                     <span>Inspired by</span>
                     <button
                         onClick={() => openLink('https://github.com/MaanasSehgal/Codeforces-Lite')}
-                        title="View Codeforces Lite on GitHub"
-                        className="font-medium text-gray-600 dark:text-zinc-400 hover:text-green-500 dark:hover:text-green-400 underline decoration-dotted transition-colors cursor-pointer"
+                        title="View Codeforces Lite by Maanas Sehgal on GitHub"
+                        className="group inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all duration-150 cursor-pointer"
                     >
-                        Codeforces Lite
+                        <Heart size={10} className="text-emerald-500 fill-emerald-500/30 group-hover:fill-emerald-500 transition-colors" />
+                        <span>Codeforces Lite</span>
                     </button>
                     <span>by Maanas Sehgal</span>
                 </div>
