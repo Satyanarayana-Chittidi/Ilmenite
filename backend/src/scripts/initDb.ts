@@ -26,7 +26,10 @@ async function initDatabase() {
             port,
             user,
             password,
-            ssl: sslEnabled ? { rejectUnauthorized: false } : undefined,
+            ssl: sslEnabled ? {
+                minVersion: 'TLSv1.2',
+                rejectUnauthorized: true
+            } : undefined,
             multipleStatements: true
         });
 

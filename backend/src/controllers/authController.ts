@@ -9,10 +9,14 @@ interface PendingOtp {
     otp: string;
     expiresAt: number;
     purpose: string;
+    lastSentAt: number;
 }
 
 // In-memory OTP cache with TTL (identical to Organova pattern - no SQL table needed)
 const pendingOtps = new Map<string, PendingOtp>();
+
+// Rate-limiting failed login attempts to protect against brute-force attacks
+const failedLoginAttempts = new Map<string, { count: number; lockedUntil: number }>();
 
 const generateToken = (user: { id: string; email: string; tier: string }) => {
     const secret = process.env.JWT_SECRET || 'super_secret_ilmenite_jwt_key_2026';
@@ -21,7 +25,7 @@ const generateToken = (user: { id: string; email: string; tier: string }) => {
 };
 
 /**
- * Step 1 of Sign Up: Send 6-digit OTP to Email
+ * Step 1 of Sign Up: Send 6-digit OTP to Email (with 60-second rate-limit)
  */
 export const sendOtp = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
@@ -33,6 +37,14 @@ export const sendOtp = async (req: AuthenticatedRequest, res: Response): Promise
         }
 
         const normalizedEmail = email.toLowerCase().trim();
+
+        // Rate limit: Enforce 60-second cooldown between OTP requests for the same email
+        const existingRecord = pendingOtps.get(normalizedEmail);
+        if (existingRecord && Date.now() - existingRecord.lastSentAt < 60000) {
+            const waitSeconds = Math.ceil((60000 - (Date.now() - existingRecord.lastSentAt)) / 1000);
+            res.status(429).json({ error: `Please wait ${waitSeconds} seconds before requesting a new code.` });
+            return;
+        }
 
         if (purpose === 'registration') {
             const [existing]: any = await pool.query('SELECT id FROM users WHERE email = ?', [normalizedEmail]);
@@ -49,7 +61,8 @@ export const sendOtp = async (req: AuthenticatedRequest, res: Response): Promise
         pendingOtps.set(normalizedEmail, {
             otp: otpCode,
             expiresAt: Date.now() + 10 * 60 * 1000,
-            purpose
+            purpose,
+            lastSentAt: Date.now()
         });
 
         console.log(`\n======================================================`);
@@ -150,6 +163,14 @@ export const login = async (req: AuthenticatedRequest, res: Response): Promise<v
 
         const normalizedEmail = email.toLowerCase().trim();
 
+        // Check if account is temporarily locked due to too many failed attempts
+        const lockInfo = failedLoginAttempts.get(normalizedEmail);
+        if (lockInfo && lockInfo.lockedUntil > Date.now()) {
+            const minutesLeft = Math.ceil((lockInfo.lockedUntil - Date.now()) / 60000);
+            res.status(429).json({ error: `Account temporarily locked due to too many failed attempts. Try again in ${minutesLeft} minute(s).` });
+            return;
+        }
+
         const [rows]: any = await pool.query(
             'SELECT id, email, password_hash, tier, avatar_url FROM users WHERE email = ?',
             [normalizedEmail]
@@ -168,9 +189,23 @@ export const login = async (req: AuthenticatedRequest, res: Response): Promise<v
 
         const isMatch = await bcrypt.compare(password, userRecord.password_hash);
         if (!isMatch) {
-            res.status(401).json({ error: 'Incorrect password. Please try again.' });
+            const currentFailed = (lockInfo?.count || 0) + 1;
+            if (currentFailed >= 5) {
+                failedLoginAttempts.set(normalizedEmail, {
+                    count: currentFailed,
+                    lockedUntil: Date.now() + 15 * 60 * 1000 // 15-minute lock
+                });
+                res.status(429).json({ error: 'Too many incorrect attempts. Account locked for 15 minutes.' });
+                return;
+            }
+
+            failedLoginAttempts.set(normalizedEmail, { count: currentFailed, lockedUntil: 0 });
+            res.status(401).json({ error: `Incorrect password. ${5 - currentFailed} attempt(s) remaining.` });
             return;
         }
+
+        // Clear failed attempts counter on successful login
+        failedLoginAttempts.delete(normalizedEmail);
 
         const user = {
             id: userRecord.id,

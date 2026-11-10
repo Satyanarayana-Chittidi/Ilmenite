@@ -1,8 +1,8 @@
-import { spawn } from 'child_process';
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
-import crypto from 'crypto';
+/**
+ * Sandboxed Code Execution Service
+ * Uses isolated Judge0 sandbox environment.
+ * Host system process spawning is intentionally disabled for security (prevents RCE).
+ */
 
 export interface TestCaseInput {
     Input: string;
@@ -18,152 +18,21 @@ export interface ExecutionResult {
     };
 }
 
-// Check if a command is available on the system
-const isCommandAvailable = (cmd: string): Promise<boolean> => {
-    return new Promise((resolve) => {
-        const checkCmd = process.platform === 'win32' ? 'where' : 'which';
-        const proc = spawn(checkCmd, [cmd]);
-        proc.on('close', (code) => resolve(code === 0));
-        proc.on('error', () => resolve(false));
-    });
+const languageMap: Record<string, number> = {
+    'cpp': 105,
+    'c': 104,
+    'python': 92,
+    'pypy': 28,
+    'java': 91,
+    'javascript': 93,
+    'kotlin': 111,
+    'go': 107,
+    'rust': 108,
+    'ruby': 72
 };
 
 /**
- * Executes a single testcase using local system compiler/runtime
- */
-const runSingleLocal = async (
-    code: string,
-    language: string,
-    input: string,
-    timeLimitMs: number
-): Promise<ExecutionResult> => {
-    const tempDir = path.join(os.tmpdir(), `ilmenite_${crypto.randomUUID()}`);
-    fs.mkdirSync(tempDir, { recursive: true });
-
-    const startTime = Date.now();
-
-    try {
-        let runCommand = '';
-        let runArgs: string[] = [];
-
-        if (language === 'python' || language === 'pypy') {
-            const scriptPath = path.join(tempDir, 'solution.py');
-            fs.writeFileSync(scriptPath, code);
-            runCommand = 'python';
-            runArgs = [scriptPath];
-        } else if (language === 'javascript') {
-            const scriptPath = path.join(tempDir, 'solution.js');
-            fs.writeFileSync(scriptPath, code);
-            runCommand = 'node';
-            runArgs = [scriptPath];
-        } else if (language === 'cpp') {
-            const srcPath = path.join(tempDir, 'solution.cpp');
-            const exePath = path.join(tempDir, process.platform === 'win32' ? 'solution.exe' : 'solution');
-            fs.writeFileSync(srcPath, code);
-
-            // Compile C++
-            const compileResult = await new Promise<{ success: boolean; stderr: string }>((resolve) => {
-                const comp = spawn('g++', ['-O3', srcPath, '-o', exePath]);
-                let stderr = '';
-                comp.stderr.on('data', (d) => { stderr += d.toString(); });
-                comp.on('close', (code) => {
-                    resolve({ success: code === 0, stderr });
-                });
-                comp.on('error', (err) => {
-                    resolve({ success: false, stderr: err.message });
-                });
-            });
-
-            if (!compileResult.success) {
-                return {
-                    Output: compileResult.stderr || 'Compilation Error',
-                    ErrorMessage: 'Compilation Error',
-                    TimeAndMemory: { Time: '0', Memory: '0' }
-                };
-            }
-
-            runCommand = exePath;
-            runArgs = [];
-        } else {
-            throw new Error(`Unsupported local language: ${language}`);
-        }
-
-        // Execute runner with strict timeout
-        return await new Promise<ExecutionResult>((resolve) => {
-            const child = spawn(runCommand, runArgs);
-            let stdout = '';
-            let stderr = '';
-            let isTimedOut = false;
-
-            const timer = setTimeout(() => {
-                isTimedOut = true;
-                child.kill('SIGKILL');
-            }, timeLimitMs);
-
-            if (input) {
-                child.stdin.write(input);
-            }
-            child.stdin.end();
-
-            child.stdout.on('data', (data) => {
-                stdout += data.toString();
-                if (stdout.length > 50000) {
-                    child.kill('SIGKILL');
-                }
-            });
-
-            child.stderr.on('data', (data) => {
-                stderr += data.toString();
-            });
-
-            child.on('close', (exitCode) => {
-                clearTimeout(timer);
-                const durationSeconds = ((Date.now() - startTime) / 1000).toFixed(3);
-
-                if (isTimedOut) {
-                    resolve({
-                        Output: 'Time Limit Exceeded',
-                        ErrorMessage: 'Time Limit Exceeded',
-                        TimeAndMemory: { Time: durationSeconds, Memory: '1.2' }
-                    });
-                    return;
-                }
-
-                if (exitCode !== 0) {
-                    resolve({
-                        Output: stderr || 'Runtime Error',
-                        ErrorMessage: 'Runtime Error',
-                        TimeAndMemory: { Time: durationSeconds, Memory: '1.5' }
-                    });
-                    return;
-                }
-
-                resolve({
-                    Output: stdout || 'No output',
-                    ErrorMessage: null,
-                    TimeAndMemory: { Time: durationSeconds, Memory: '1.1' }
-                });
-            });
-
-            child.on('error', (err) => {
-                clearTimeout(timer);
-                resolve({
-                    Output: err.message,
-                    ErrorMessage: 'Runtime Error',
-                    TimeAndMemory: { Time: '0', Memory: '0' }
-                });
-            });
-        });
-    } finally {
-        // Clean up temp dir
-        try {
-            fs.rmSync(tempDir, { recursive: true, force: true });
-        } catch {}
-    }
-};
-
-/**
- * Judge0 Fallback Request
+ * Executes test cases using Judge0's isolated sandbox
  */
 const runWithJudge0 = async (
     code: string,
@@ -171,18 +40,7 @@ const runWithJudge0 = async (
     testCases: TestCaseInput[],
     timeLimitMs: number
 ): Promise<ExecutionResult[]> => {
-    const languageMap: Record<string, number> = {
-        'cpp': 105,
-        'python': 92,
-        'pypy': 28,
-        'java': 91,
-        'javascript': 93,
-        'kotlin': 111,
-        'go': 107,
-        'rust': 108
-    };
-
-    const langId = languageMap[language] || 105;
+    const langId = languageMap[language.toLowerCase()] || 105;
     const cpuLimitSec = Math.max(1, Math.round(timeLimitMs / 1000));
 
     const submissions = testCases.map(tc => ({
@@ -193,39 +51,84 @@ const runWithJudge0 = async (
     }));
 
     const isBatch = submissions.length > 1;
+    const apiUrl = process.env.JUDGE0_API_URL || 'https://ce.judge0.com';
+    const apiKey = process.env.JUDGE0_API_KEY;
+
     const url = isBatch
-        ? 'https://ce.judge0.com/submissions/batch?base64_encoded=true'
-        : 'https://ce.judge0.com/submissions?base64_encoded=true';
+        ? `${apiUrl}/submissions/batch?base64_encoded=true`
+        : `${apiUrl}/submissions?base64_encoded=true`;
+
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+    };
+    if (apiKey) {
+        headers['X-RapidAPI-Key'] = apiKey;
+    }
 
     const submitRes = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(isBatch ? { submissions } : submissions[0])
     });
 
+    if (!submitRes.ok) {
+        throw new Error(`Judge0 API error: ${submitRes.status} ${submitRes.statusText}`);
+    }
+
     const submitData: any = await submitRes.json();
-    const tokens = isBatch ? submitData.map((s: any) => s.token) : [submitData.token];
+    const tokens: string[] = isBatch
+        ? submitData.map((s: any) => s.token)
+        : [submitData.token];
 
-    // Wait 1.5s for Judge0 compilation
-    await new Promise(r => setTimeout(r, 1500));
+    // Poll for results (max 10 seconds)
+    const startTime = Date.now();
+    let completedResults: any[] = [];
 
-    const resultsUrl = isBatch
-        ? `https://ce.judge0.com/submissions/batch?base64_encoded=true&tokens=${tokens.join(',')}`
-        : `https://ce.judge0.com/submissions/${tokens[0]}?base64_encoded=true`;
+    while (Date.now() - startTime < 10000) {
+        await new Promise(r => setTimeout(r, 600));
 
-    const getRes = await fetch(resultsUrl);
-    const getResults: any = await getRes.json();
-    const items = isBatch ? (getResults.submissions || []) : [getResults];
+        const checkUrl = isBatch
+            ? `${apiUrl}/submissions/batch?tokens=${tokens.join(',')}&base64_encoded=true`
+            : `${apiUrl}/submissions/${tokens[0]}?base64_encoded=true`;
 
-    return items.map((res: any) => {
-        const decode = (b64: string | null) => b64 ? Buffer.from(b64, 'base64').toString('utf8') : '';
-        const statusId = res.status_id || res.status?.id || 0;
+        const checkRes = await fetch(checkUrl, { headers });
+        if (!checkRes.ok) continue;
 
+        const checkData: any = await checkRes.json();
+        const results = isBatch ? checkData.submissions : [checkData];
+
+        const allFinished = results.every((r: any) => r && r.status && r.status.id >= 3);
+        if (allFinished) {
+            completedResults = results;
+            break;
+        }
+    }
+
+    const decode = (str: string | null | undefined): string => {
+        if (!str) return '';
+        try {
+            return Buffer.from(str, 'base64').toString('utf8');
+        } catch {
+            return str;
+        }
+    };
+
+    return completedResults.map((res: any) => {
+        if (!res) {
+            return {
+                Output: 'Execution timed out',
+                ErrorMessage: 'Timeout',
+                TimeAndMemory: { Time: '0', Memory: '0' }
+            };
+        }
+
+        const statusId = res.status?.id;
         let errorMessage: string | null = null;
         let output = '';
 
         if (statusId === 3) {
-            output = decode(res.stdout) || 'No output';
+            // Success / Accepted
+            output = decode(res.stdout);
         } else if (statusId === 4) {
             errorMessage = 'Wrong Answer';
             output = decode(res.stdout) || 'Wrong Answer';
@@ -252,7 +155,7 @@ const runWithJudge0 = async (
 };
 
 /**
- * Main execution coordinator: tries in-house runner first, falls back to Judge0
+ * Main execution coordinator: exclusively uses sandboxed Judge0 runner
  */
 export const executeCode = async (
     code: string,
@@ -260,26 +163,5 @@ export const executeCode = async (
     testCases: TestCaseInput[],
     timeLimitMs: number = 3000
 ): Promise<ExecutionResult[]> => {
-    let canRunLocally = false;
-
-    if (language === 'python' || language === 'pypy') {
-        canRunLocally = await isCommandAvailable('python');
-    } else if (language === 'javascript') {
-        canRunLocally = await isCommandAvailable('node');
-    } else if (language === 'cpp') {
-        canRunLocally = await isCommandAvailable('g++');
-    }
-
-    if (canRunLocally) {
-        console.log(`[CodeRunner] Executing locally using host environment (${language})`);
-        const results: ExecutionResult[] = [];
-        for (const tc of testCases) {
-            const res = await runSingleLocal(code, language, tc.Input, timeLimitMs);
-            results.push(res);
-        }
-        return results;
-    } else {
-        console.log(`[CodeRunner] Host compiler for ${language} not detected, using Judge0 fallback`);
-        return await runWithJudge0(code, language, testCases, timeLimitMs);
-    }
+    return await runWithJudge0(code, language, testCases, timeLimitMs);
 };

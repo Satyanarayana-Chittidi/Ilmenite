@@ -43,8 +43,8 @@ router.post('/auth/github/callback', handleGitHubCallback);
 router.post('/auth/avatar', authenticateToken, updateAvatar);
 router.get('/auth/me', authenticateToken, getMe);
 
-// --- Code Execution Route ---
-router.post('/execute', runCode);
+// --- Code Execution Route (Protected with Authentication) ---
+router.post('/execute', authenticateToken, runCode);
 
 // --- Code & Settings Sync Routes ---
 router.post('/code/save', authenticateToken, saveCode);
