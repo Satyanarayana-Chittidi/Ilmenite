@@ -19,7 +19,6 @@ import { AuthForm } from '../auth/AuthForm';
 const CodeEditor = React.lazy(() => import('./editor/CodeEditor'));
 import * as monaco from 'monaco-editor';
 import { browserAPI } from '../../utils/browser/browserDetect';
-import Footer from '../global/Footer';
 
 interface MainProps {
     showOptionsRef: React.MutableRefObject<boolean>;
@@ -319,8 +318,6 @@ const Main: React.FC<MainProps> = ({ showOptionsRef, setShowOptions, theme }) =>
                     initialHeight={70}
                 />
             </div>
-
-            <Footer />
         </div>
     );
 };

@@ -5,41 +5,6 @@ interface FooterProps {
     className?: string;
 }
 
-const promoLinks = [
-    {
-        label: 'Rate',
-        href: 'https://chromewebstore.google.com/detail/ilmenite/oanffehmigchhkjfeccpdkmmonpbbapc/reviews',
-        tooltip: 'Rate Ilmenite on Chrome Web Store',
-        icon: Star,
-        iconClass: 'text-amber-500 fill-amber-500/20 group-hover:fill-amber-500 transition-colors',
-        hoverClass: 'hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30'
-    },
-    {
-        label: 'Website',
-        href: 'https://ilmenite.vercel.app',
-        tooltip: 'Visit Ilmenite Landing Page',
-        icon: Globe,
-        iconClass: 'text-purple-500 group-hover:text-purple-400 transition-colors',
-        hoverClass: 'hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/30'
-    },
-    {
-        label: 'LinkedIn',
-        href: 'https://www.linkedin.com/in/satyanarayana-chittidi',
-        tooltip: 'Connect on LinkedIn',
-        icon: Linkedin,
-        iconClass: 'text-blue-500 group-hover:text-blue-400 transition-colors',
-        hoverClass: 'hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30'
-    },
-    {
-        label: 'GitHub',
-        href: 'https://github.com/Satyanarayana-Chittidi/Ilmenite',
-        tooltip: 'Star / Fork on GitHub',
-        icon: Github,
-        iconClass: 'text-gray-700 dark:text-zinc-300 group-hover:text-black dark:group-hover:text-white transition-colors',
-        hoverClass: 'hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800'
-    }
-];
-
 const openLink = (url: string) => {
     try {
         if (typeof window !== 'undefined' && (window as any).chrome?.tabs?.create) {
@@ -54,37 +19,74 @@ const openLink = (url: string) => {
 
 const Footer: React.FC<FooterProps> = ({ className = '' }) => {
     return (
-        <footer 
-            className={`w-full flex-shrink-0 h-9 px-3 flex items-center justify-between border-t border-gray-200 dark:border-zinc-800 bg-[#fbfbfb] dark:bg-[#161616] select-none text-xs transition-colors z-20 ${className}`}
-        >
-            <div className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-500">
-                <span className="font-semibold text-gray-700 dark:text-zinc-300 tracking-tight">Ilmenite</span>
-                <span className="text-[10px] px-1 py-0.5 rounded bg-gray-200 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 font-mono">v1.3.0</span>
+        <div className={`w-full mt-6 pt-4 pb-6 px-2 border-t border-gray-200/80 dark:border-zinc-800/80 select-none text-xs ${className}`}>
+            {/* Row 1: Extension Name & Version + Rate & Website */}
+            <div className="flex flex-wrap items-center justify-between gap-2.5 pb-2.5">
+                <div className="flex items-center gap-2">
+                    <span className="font-bold text-gray-800 dark:text-zinc-200 text-sm tracking-tight">
+                        Ilmenite
+                    </span>
+                    <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-gray-200/80 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400">
+                        v1.3.0
+                    </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => openLink('https://chromewebstore.google.com/detail/ilmenite/oanffehmigchhkjfeccpdkmmonpbbapc/reviews')}
+                        title="Rate Ilmenite on Chrome Web Store"
+                        className="group flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 transition-all duration-150 cursor-pointer"
+                    >
+                        <Star size={13} className="text-amber-500 fill-amber-500/30 group-hover:fill-amber-500 transition-colors" />
+                        <span>Rate Extension</span>
+                    </button>
+
+                    <button
+                        onClick={() => openLink('https://ilmenite.vercel.app')}
+                        title="Visit Ilmenite Official Website"
+                        className="group flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-purple-600 dark:text-purple-400 bg-purple-500/10 hover:bg-purple-500/20 transition-all duration-150 cursor-pointer"
+                    >
+                        <Globe size={13} className="text-purple-500 group-hover:rotate-12 transition-transform" />
+                        <span>Website</span>
+                    </button>
+                </div>
             </div>
 
-            <div className="flex items-center gap-1">
-                {promoLinks.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                        <a
-                            key={item.label}
-                            href={item.href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                openLink(item.href);
-                            }}
-                            title={item.tooltip}
-                            className={`group flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium text-gray-600 dark:text-zinc-400 transition-all duration-150 cursor-pointer ${item.hoverClass}`}
-                        >
-                            <Icon size={13} className={item.iconClass} />
-                            <span className="hidden min-[360px]:inline">{item.label}</span>
-                        </a>
-                    );
-                })}
+            {/* Row 2: Socials (LinkedIn, GitHub) + Attribution Credits */}
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px]">
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => openLink('https://www.linkedin.com/in/satyanarayana-chittidi')}
+                        title="Connect with Satyanarayana Chittidi on LinkedIn"
+                        className="flex items-center gap-1.5 text-gray-600 dark:text-zinc-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors cursor-pointer"
+                    >
+                        <Linkedin size={13} className="text-blue-500" />
+                        <span>LinkedIn</span>
+                    </button>
+
+                    <button
+                        onClick={() => openLink('https://github.com/Satyanarayana-Chittidi/Ilmenite')}
+                        title="View Ilmenite GitHub Repository"
+                        className="flex items-center gap-1.5 text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+                    >
+                        <Github size={13} />
+                        <span>GitHub</span>
+                    </button>
+                </div>
+
+                <div className="flex items-center gap-1 text-[10px] text-gray-400 dark:text-zinc-500">
+                    <span>Inspired by</span>
+                    <button
+                        onClick={() => openLink('https://github.com/MaanasSehgal/Codeforces-Lite')}
+                        title="View Codeforces Lite on GitHub"
+                        className="font-medium text-gray-600 dark:text-zinc-400 hover:text-green-500 dark:hover:text-green-400 underline decoration-dotted transition-colors cursor-pointer"
+                    >
+                        Codeforces Lite
+                    </button>
+                    <span>by Maanas Sehgal</span>
+                </div>
             </div>
-        </footer>
+        </div>
     );
 };
 

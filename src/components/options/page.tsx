@@ -151,9 +151,8 @@ const Settings: React.FC<SettingsProps> = ({ setShowOptions, theme, setTheme }) 
                             />
                         </div>
                     </div>
+                    <Footer />
                 </div>
-
-                <Footer />
             </div>
             <UpgradePopup isOpen={showUpgradePopup} onClose={() => setShowUpgradePopup(false)} featureName={upgradeFeatureName || "Cloud Template Sync"} />
         </>

@@ -8,6 +8,7 @@ import { CircleX, Plus, Copy, Check, RotateCcw, Terminal, LoaderCircle, X } from
 import TestCaseNotAccess from './TestCaseNotAccess';
 import { browserAPI } from '../../../utils/browser/browserDetect';
 import { useTestCases } from '../../../utils/hooks/useTestCases';
+import Footer from '../../global/Footer';
 
 const TestCases = React.memo(() => {
     const [selectedTab, setSelectedTab] = useState<number>(0);
@@ -293,6 +294,7 @@ const TestCases = React.memo(() => {
                             </div>
                         </div>
                     )}
+                    <Footer />
                 </div>
             )}
             <UpgradePopup isOpen={showUpgradePopup} onClose={() => setShowUpgradePopup(false)} featureName={upgradeFeatureName || "Custom Test Cases"} />
