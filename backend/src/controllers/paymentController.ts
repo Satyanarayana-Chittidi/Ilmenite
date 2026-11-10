@@ -23,32 +23,58 @@ export const createSubscription = async (req: Request, res: Response): Promise<v
     try {
         let uid = req.body.uid || (req as AuthenticatedRequest).user?.id;
         const email = req.body.email;
-        const normalizedEmail = email ? email.toLowerCase().trim() : null;
+        let normalizedEmail = email ? email.toLowerCase().trim() : null;
 
-        // Ensure user exists in the `users` table to satisfy foreign key fk_subscriptions_user
+        // If uid looks like an email and email was not explicitly provided, normalize
+        if (!normalizedEmail && typeof uid === 'string' && uid.includes('@')) {
+            normalizedEmail = uid.toLowerCase().trim();
+            uid = null;
+        }
+
+        // 1. Check if user already exists by email
         if (normalizedEmail) {
-            const [existing]: any = await pool.query('SELECT id FROM users WHERE email = ?', [normalizedEmail]);
-            if (existing.length > 0) {
-                uid = existing[0].id;
-            } else if (uid) {
-                await pool.query(
-                    'INSERT INTO users (id, email, tier) VALUES (?, ?, "free") ON DUPLICATE KEY UPDATE email = VALUES(email)',
-                    [uid, normalizedEmail]
-                );
-            } else {
-                uid = crypto.randomUUID();
-                await pool.query('INSERT INTO users (id, email, tier) VALUES (?, ?, "free")', [uid, normalizedEmail]);
+            const [existingByEmail]: any = await pool.query('SELECT id FROM users WHERE email = ?', [normalizedEmail]);
+            if (existingByEmail.length > 0) {
+                uid = existingByEmail[0].id;
             }
-        } else if (uid) {
-            const [existing]: any = await pool.query('SELECT id FROM users WHERE id = ?', [uid]);
-            if (existing.length === 0) {
-                await pool.query('INSERT INTO users (id, email, tier) VALUES (?, ?, "free")', [uid, `${uid}@ilmenite.user`]);
+        }
+
+        // 2. Check if user exists by uid, or create record
+        if (uid) {
+            const [existingById]: any = await pool.query('SELECT id, email FROM users WHERE id = ?', [uid]);
+            if (existingById.length === 0) {
+                const targetEmail = normalizedEmail || `${uid}@ilmenite.user`;
+                const [emailConflict]: any = await pool.query('SELECT id FROM users WHERE email = ?', [targetEmail]);
+                if (emailConflict.length > 0) {
+                    uid = emailConflict[0].id;
+                } else {
+                    await pool.query('INSERT INTO users (id, email, tier) VALUES (?, ?, "free")', [uid, targetEmail]);
+                }
+            } else if (normalizedEmail && existingById[0].email !== normalizedEmail) {
+                const [conflict]: any = await pool.query('SELECT id FROM users WHERE email = ? AND id != ?', [normalizedEmail, uid]);
+                if (conflict.length > 0) {
+                    uid = conflict[0].id;
+                } else {
+                    await pool.query('UPDATE users SET email = ? WHERE id = ?', [normalizedEmail, uid]);
+                }
             }
+        } else if (normalizedEmail) {
+            uid = crypto.randomUUID();
+            await pool.query('INSERT INTO users (id, email, tier) VALUES (?, ?, "free")', [uid, normalizedEmail]);
         }
 
         if (!uid) {
             res.status(400).json({ error: 'User ID (uid) or email is required' });
             return;
+        }
+
+        // 3. Absolute guarantee: verify user row exists in `users` table before touching subscriptions
+        const [userVerification]: any = await pool.query('SELECT id FROM users WHERE id = ?', [uid]);
+        if (userVerification.length === 0) {
+            await pool.query('INSERT INTO users (id, email, tier) VALUES (?, ?, "free")', [
+                uid,
+                normalizedEmail || `${uid}@ilmenite.user`
+            ]);
         }
 
         const razorpay = getRazorpayClient();
@@ -285,7 +311,15 @@ export const getSubscriptionStatus = async (req: AuthenticatedRequest, res: Resp
         }
 
         if (userRows.length === 0) {
-            res.status(404).json({ error: 'User not found', tier: 'free' });
+            res.json({
+                user: {
+                    id: identifier.includes('@') ? null : identifier,
+                    email: identifier.includes('@') ? identifier : null,
+                    avatar_url: null
+                },
+                tier: 'free',
+                subscription: null
+            });
             return;
         }
 

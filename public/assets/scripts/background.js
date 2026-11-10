@@ -56,7 +56,7 @@ globalThis.browserAPI.runtime.onMessage.addListener((request, sender, sendRespon
         });
         
         // Notify all active tabs that we logged in
-        browserAPI.tabs.query({}, (tabs) => {
+        browserAPI.tabs.query({ url: '*://codeforces.com/*' }, (tabs) => {
             for (let tab of tabs) {
                 browserAPI.tabs.sendMessage(tab.id, { 
                     type: 'TOGGLE_LOGIN', 

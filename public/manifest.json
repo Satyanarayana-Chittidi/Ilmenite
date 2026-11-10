@@ -9,7 +9,6 @@
     "default_popup": "index.html"
   },
   "permissions": [
-    "tabs",
     "storage",
     "unlimitedStorage",
     "activeTab",
@@ -18,8 +17,7 @@
   ],
   "host_permissions": [
     "https://codeforces.com/*",
-    "https://www.onlinegdb.com/*",
-    "https://ilmenite.onrender.com/*"
+    "https://www.onlinegdb.com/*"
   ],
   "externally_connectable": {
     "matches": [
