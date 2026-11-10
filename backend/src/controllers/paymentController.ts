@@ -128,8 +128,22 @@ export const verifyPayment = async (req: Request, res: Response): Promise<void> 
             }
         }
 
-        // Activate Plus tier for user
-        await pool.query('UPDATE users SET tier = "plus" WHERE id = ?', [uid]);
+        // Activate Plus tier for user (supporting both UUID and email identifiers)
+        if (uid.includes('@')) {
+            await pool.query('UPDATE users SET tier = "plus" WHERE email = ?', [uid.toLowerCase().trim()]);
+        } else {
+            await pool.query('UPDATE users SET tier = "plus" WHERE id = ?', [uid]);
+        }
+
+        // Also ensure user_id from the subscriptions table row is updated
+        const [subRows]: any = await pool.query(
+            'SELECT user_id FROM subscriptions WHERE razorpay_subscription_id = ?',
+            [razorpay_subscription_id]
+        );
+        if (subRows.length > 0 && subRows[0].user_id) {
+            await pool.query('UPDATE users SET tier = "plus" WHERE id = ?', [subRows[0].user_id]);
+        }
+
         await pool.query(
             `UPDATE subscriptions 
              SET status = 'active', razorpay_payment_id = ?, updated_at = CURRENT_TIMESTAMP
@@ -177,11 +191,24 @@ export const handleWebhook = async (req: Request, res: Response): Promise<void> 
         if (event === 'subscription.activated' || event === 'subscription.charged') {
             const subEntity = payload.subscription.entity;
             const subId = subEntity.id;
-            const userId = subEntity.notes?.userId;
+            let userId = subEntity.notes?.userId;
+
+            // Fallback: look up user_id from database if not in notes
+            if (!userId) {
+                const [existingSub]: any = await pool.query('SELECT user_id FROM subscriptions WHERE razorpay_subscription_id = ?', [subId]);
+                if (existingSub.length > 0) {
+                    userId = existingSub[0].user_id;
+                }
+            }
 
             if (userId) {
-                await pool.query('UPDATE users SET tier = "plus" WHERE id = ?', [userId]);
+                if (userId.includes('@')) {
+                    await pool.query('UPDATE users SET tier = "plus" WHERE email = ?', [userId.toLowerCase().trim()]);
+                } else {
+                    await pool.query('UPDATE users SET tier = "plus" WHERE id = ?', [userId]);
+                }
             }
+
             await pool.query(
                 'UPDATE subscriptions SET status = "active", updated_at = CURRENT_TIMESTAMP WHERE razorpay_subscription_id = ?',
                 [subId]
@@ -189,11 +216,23 @@ export const handleWebhook = async (req: Request, res: Response): Promise<void> 
         } else if (event === 'subscription.cancelled' || event === 'subscription.halted') {
             const subEntity = payload.subscription.entity;
             const subId = subEntity.id;
-            const userId = subEntity.notes?.userId;
+            let userId = subEntity.notes?.userId;
+
+            if (!userId) {
+                const [existingSub]: any = await pool.query('SELECT user_id FROM subscriptions WHERE razorpay_subscription_id = ?', [subId]);
+                if (existingSub.length > 0) {
+                    userId = existingSub[0].user_id;
+                }
+            }
 
             if (userId) {
-                await pool.query('UPDATE users SET tier = "free" WHERE id = ?', [userId]);
+                if (userId.includes('@')) {
+                    await pool.query('UPDATE users SET tier = "free" WHERE email = ?', [userId.toLowerCase().trim()]);
+                } else {
+                    await pool.query('UPDATE users SET tier = "free" WHERE id = ?', [userId]);
+                }
             }
+
             await pool.query(
                 'UPDATE subscriptions SET status = "cancelled", updated_at = CURRENT_TIMESTAMP WHERE razorpay_subscription_id = ?',
                 [subId]
