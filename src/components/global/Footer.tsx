@@ -56,7 +56,7 @@ const Footer: React.FC<FooterProps> = ({ className = '' }) => {
             <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5 text-[11px]">
                 <div className="flex items-center gap-2">
                     <button
-                        onClick={() => openLink('https://www.linkedin.com/in/satyanarayana-chittidi')}
+                        onClick={() => openLink('https://www.linkedin.com/in/chittidi-satyanarayana/')}
                         title="Connect with Satyanarayana Chittidi on LinkedIn"
                         className="group flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 transition-all duration-150 cursor-pointer"
                     >
