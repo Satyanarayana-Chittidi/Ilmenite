@@ -100,7 +100,7 @@ export async function sendOtpEmail(toEmail: string, otp: string): Promise<SendOt
                 </tr>
               </table>
               <h1 style="margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.5px; color: #0f172a;">
-                ILMEN<span style="color: #3b82f6;">ITE</span>
+                Ilmenite
               </h1>
               <p style="margin: 6px 0 0 0; font-size: 11px; font-weight: 600; color: #64748b; letter-spacing: 1px; text-transform: uppercase;">
                 Codeforces In-Browser IDE & Toolkit
