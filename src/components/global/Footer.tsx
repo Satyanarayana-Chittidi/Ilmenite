@@ -27,7 +27,7 @@ const Footer: React.FC<FooterProps> = ({ className = '' }) => {
                         Ilmenite
                     </span>
                     <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-gray-200/80 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400">
-                        v1.3.0
+                        v1.3.5
                     </span>
                 </div>
 
