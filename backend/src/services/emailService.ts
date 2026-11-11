@@ -66,7 +66,21 @@ export async function sendOtpEmail(toEmail: string, otp: string): Promise<SendOt
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light only">
+  <meta name="supported-color-schemes" content="light only">
   <title>Ilmenite Verification Code</title>
+  <style>
+    :root {
+      color-scheme: light only;
+      supported-color-schemes: light only;
+    }
+    @media (prefers-color-scheme: dark) {
+      .brand-logo {
+        filter: none !important;
+        -webkit-filter: none !important;
+      }
+    }
+  </style>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; -webkit-font-smoothing: antialiased;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f1f5f9; padding: 40px 15px;">
@@ -78,7 +92,13 @@ export async function sendOtpEmail(toEmail: string, otp: string): Promise<SendOt
           <!-- Header -->
           <tr>
             <td style="padding: 36px 40px 24px 40px; text-align: center; border-bottom: 1px solid #f1f5f9; background: #ffffff;">
-              <img src="https://ilmenite.vercel.app/assets/ilmenite_icon.png" width="48" height="48" alt="Ilmenite Logo" style="display: block; margin: 0 auto 12px auto; border-radius: 12px;" />
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center" style="margin: 0 auto 16px auto;">
+                <tr>
+                  <td align="center" style="width: 60px; height: 60px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 50%; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06); text-align: center; vertical-align: middle; padding: 2px;">
+                    <img class="brand-logo" src="https://ilmenite.vercel.app/assets/ilmenite_icon.png" width="64" height="64" alt="Ilmenite" style="display: block; width: 56px !important; max-width: 56px !important; min-width: 56px !important; height: 56px !important; max-height: 56px !important; border-radius: 50%; border: 0; outline: none; margin: 0 auto;" />
+                  </td>
+                </tr>
+              </table>
               <h1 style="margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.5px; color: #0f172a;">
                 ILMEN<span style="color: #3b82f6;">ITE</span>
               </h1>
