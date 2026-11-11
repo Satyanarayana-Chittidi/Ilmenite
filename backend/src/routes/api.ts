@@ -8,7 +8,8 @@ import {
     updateAvatar,
     getGitHubOAuthUrl,
     handleGitHubCallback,
-    handleGitHubGetCallback
+    handleGitHubGetCallback,
+    deleteAccount
 } from '../controllers/authController.js';
 import {
     saveCode,
@@ -44,6 +45,7 @@ router.get('/auth/github/callback', handleGitHubGetCallback);
 router.post('/auth/github/callback', handleGitHubCallback);
 router.post('/auth/avatar', authenticateToken, updateAvatar);
 router.get('/auth/me', authenticateToken, getMe);
+router.delete('/auth/account', authenticateToken, deleteAccount);
 
 // --- Code Execution Route (Protected with Authentication) ---
 router.post('/execute', authenticateToken, runCode);

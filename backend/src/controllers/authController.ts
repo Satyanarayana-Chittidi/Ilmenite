@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { pool } from '../config/db.js';
 import { AuthenticatedRequest } from '../middleware/authMiddleware.js';
+import { sendOtpEmail } from '../services/emailService.js';
 
 interface PendingOtp {
     otp: string;
@@ -46,12 +47,10 @@ export const sendOtp = async (req: AuthenticatedRequest, res: Response): Promise
             return;
         }
 
-        if (purpose === 'registration') {
-            const [existing]: any = await pool.query('SELECT id FROM users WHERE email = ?', [normalizedEmail]);
-            if (existing.length > 0) {
-                res.status(409).json({ error: 'An account with this email already exists. Please sign in.' });
-                return;
-            }
+        const [existing]: any = await pool.query('SELECT id FROM users WHERE email = ?', [normalizedEmail]);
+        if (existing.length > 0) {
+            res.status(409).json({ error: 'An account with this email already exists. Please sign in.' });
+            return;
         }
 
         // Generate 6-digit cryptographic OTP
@@ -65,14 +64,14 @@ export const sendOtp = async (req: AuthenticatedRequest, res: Response): Promise
             lastSentAt: Date.now()
         });
 
-        console.log(`\n======================================================`);
-        console.log(`🔑 [AUTH OTP] Verification code for ${normalizedEmail}: ${otpCode}`);
-        console.log(`======================================================\n`);
+        // Dispatch Email using multi-provider service (Resend / Brevo / SMTP / Console fallback)
+        const emailResult = await sendOtpEmail(normalizedEmail, otpCode, purpose);
 
         res.json({
             success: true,
             message: `Verification code sent to ${normalizedEmail}`,
-            devOtp: process.env.NODE_ENV !== 'production' ? otpCode : undefined
+            devOtp: process.env.NODE_ENV !== 'production' ? otpCode : undefined,
+            delivered: emailResult.delivered
         });
     } catch (error: any) {
         console.error('[Send OTP Error]:', error);
@@ -491,5 +490,29 @@ export const handleGitHubCallback = async (req: Request, res: Response): Promise
     } catch (err: any) {
         console.error('[GitHub Callback Error]:', err);
         res.status(500).json({ error: 'GitHub login failed: ' + err.message });
+    }
+};
+
+/**
+ * Permanently delete user account and associated cloud data
+ */
+export const deleteAccount = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+        const userId = req.user?.id;
+        if (!userId) {
+            res.status(401).json({ error: 'Unauthorized: User not authenticated' });
+            return;
+        }
+
+        // Clean up user data explicitly (and via DB cascades)
+        await pool.query('DELETE FROM user_codes WHERE user_id = ?', [userId]);
+        await pool.query('DELETE FROM user_settings WHERE user_id = ?', [userId]);
+        await pool.query('DELETE FROM subscriptions WHERE user_id = ?', [userId]);
+        await pool.query('DELETE FROM users WHERE id = ?', [userId]);
+
+        res.json({ message: 'Account and associated data deleted successfully' });
+    } catch (err: any) {
+        console.error('[Delete Account Error]:', err);
+        res.status(500).json({ error: 'Failed to delete account: ' + err.message });
     }
 };

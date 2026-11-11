@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import apiRoutes from './routes/api.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { testConnection } from './config/db.js';
+import { testEmailConnection } from './services/emailService.js';
 
 dotenv.config();
 
@@ -79,6 +80,9 @@ const server = app.listen(PORT, async () => {
 
     // Test DB connection on startup
     await testConnection();
+
+    // Test Email connection on startup
+    testEmailConnection().catch(() => {});
 });
 
 export default app;

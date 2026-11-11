@@ -37,7 +37,7 @@ const Footer: React.FC<FooterProps> = ({ className = '' }) => {
                         title="Rate Ilmenite on Chrome Web Store"
                         className="group flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 transition-all duration-150 cursor-pointer"
                     >
-                        <Star size={13} className="text-amber-500 fill-amber-500/30 group-hover:fill-amber-500 transition-colors" />
+                        <Star size={13} className="text-amber-400 fill-amber-400 group-hover:scale-110 transition-transform" />
                         <span>Rate Extension</span>
                     </button>
 
@@ -60,7 +60,7 @@ const Footer: React.FC<FooterProps> = ({ className = '' }) => {
                         title="Connect with Satyanarayana Chittidi on LinkedIn"
                         className="group flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 transition-all duration-150 cursor-pointer"
                     >
-                        <Linkedin size={13} className="text-blue-500 group-hover:scale-110 transition-transform" />
+                        <Linkedin size={13} className="text-[#0A66C2] fill-[#0A66C2] dark:text-[#388bfd] dark:fill-[#388bfd] group-hover:scale-110 transition-transform" />
                         <span>LinkedIn</span>
                     </button>
 
@@ -69,7 +69,7 @@ const Footer: React.FC<FooterProps> = ({ className = '' }) => {
                         title="View Ilmenite GitHub Repository"
                         className="group flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-gray-700 dark:text-zinc-300 bg-gray-500/10 hover:bg-gray-500/20 dark:bg-zinc-800 dark:hover:bg-zinc-700 transition-all duration-150 cursor-pointer"
                     >
-                        <Github size={13} className="text-gray-700 dark:text-zinc-300 group-hover:scale-110 transition-transform" />
+                        <Github size={13} className="text-zinc-800 fill-zinc-800 dark:text-zinc-200 dark:fill-zinc-200 group-hover:scale-110 transition-transform" />
                         <span>GitHub</span>
                     </button>
                 </div>
@@ -81,7 +81,7 @@ const Footer: React.FC<FooterProps> = ({ className = '' }) => {
                         title="View Codeforces Lite by Maanas Sehgal on GitHub"
                         className="group inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all duration-150 cursor-pointer"
                     >
-                        <Heart size={10} className="text-emerald-500 fill-emerald-500/30 group-hover:fill-emerald-500 transition-colors" />
+                        <Heart size={10} className="text-rose-500 fill-rose-500 group-hover:scale-125 transition-transform" />
                         <span>Codeforces Lite</span>
                     </button>
                     <span>by Maanas Sehgal</span>

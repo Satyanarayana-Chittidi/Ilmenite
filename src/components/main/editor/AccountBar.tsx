@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { useCFStore } from '../../../zustand/useCFStore';
-import { LogOut, Camera, ChevronDown, RefreshCw } from 'lucide-react';
+import { LogOut, Camera, ChevronDown, RefreshCw, Trash2 } from 'lucide-react';
 import { browserAPI } from '../../../utils/browser/browserDetect';
 import { API_BASE_URL } from '../../../utils/apiConfig';
 import Option from '../../options/ui/Option';
@@ -24,6 +24,8 @@ const AccountBar: React.FC<AccountBarProps> = () => {
     const setAvatarUrl = useCFStore(state => state.setAvatarUrl);
     const [showCancelPopup, setShowCancelPopup] = useState(false);
     const [showLogoutPopup, setShowLogoutPopup] = useState(false);
+    const [showDeletePopup, setShowDeletePopup] = useState(false);
+    const [isDeletingAccount, setIsDeletingAccount] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [isCheckingTier, setIsCheckingTier] = useState(false);
@@ -83,6 +85,62 @@ const AccountBar: React.FC<AccountBarProps> = () => {
         localStorage.removeItem('session');
         
         setShowLogoutPopup(false);
+    };
+
+    const confirmDeleteAccount = async () => {
+        setIsDeletingAccount(true);
+        try {
+            const storageRes = await new Promise<any>((resolve) =>
+                browserAPI.storage.local.get(['authToken'], resolve)
+            );
+            const token = storageRes.authToken || localStorage.getItem('authToken');
+
+            if (token) {
+                const res = await fetch(`${API_BASE_URL}/auth/account`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    throw new Error(data.error || 'Failed to delete account on server');
+                }
+            }
+
+            // Clear local state
+            setIsLoggedIn(false);
+            useCFStore.getState().setIsPlusUser(false);
+            useCFStore.getState().setSession(null);
+            useCFStore.getState().setEmail(null);
+            useCFStore.getState().setAvatarUrl(null);
+
+            // Clear browser storage
+            browserAPI.storage.local.set({ 
+                isLoggedIn: false, 
+                isPlusUser: false,
+                session: null,
+                authToken: null,
+                userId: null,
+                email: null,
+                avatarUrl: null,
+                supabaseAvatar: null
+            });
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('isPlusUser');
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('email');
+            localStorage.removeItem('session');
+
+            setShowDeletePopup(false);
+            setShowDropdown(false);
+            toast.success('Account and cloud data permanently deleted.');
+        } catch (err: any) {
+            toast.error('Failed to delete account: ' + (err.message || 'Unknown error'));
+        } finally {
+            setIsDeletingAccount(false);
+        }
     };
 
     const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -262,39 +320,60 @@ const AccountBar: React.FC<AccountBarProps> = () => {
                 title={accountTitle}
                 expandedContent={
                     showDropdown ? (
-                        <div className="flex justify-between items-center w-full">
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {isPlusUser ? 'You are using Ilmenite Plus' : 'You are using free tier of Ilmenite'}
-                            </span>
-                            <div className="flex items-center gap-2">
-                                {!isPlusUser && (
+                        <div className="flex flex-col gap-3 w-full py-0.5">
+                            <div className="flex justify-between items-center w-full">
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    {isPlusUser ? 'You are using Ilmenite Plus' : 'You are using free tier of Ilmenite'}
+                                </span>
+                                <div className="flex items-center gap-2">
+                                    {!isPlusUser && (
+                                        <button
+                                            onClick={handleRefreshTier}
+                                            disabled={isCheckingTier || refreshCooldown > 0}
+                                            className={`p-2 rounded-lg bg-white/50 dark:bg-[#2a2a2a]/50 border border-black/5 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center ${
+                                                (isCheckingTier || refreshCooldown > 0) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                                            }`}
+                                            title={refreshCooldown > 0 ? `Refresh available in ${refreshCooldown}s` : "Refresh Subscription Status"}
+                                        >
+                                            <RefreshCw size={14} className={isCheckingTier ? "animate-spin text-blue-500" : ""} />
+                                        </button>
+                                    )}
                                     <button
-                                        onClick={handleRefreshTier}
-                                        disabled={isCheckingTier || refreshCooldown > 0}
-                                        className={`p-2 rounded-lg bg-white/50 dark:bg-[#2a2a2a]/50 border border-black/5 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center ${
-                                            (isCheckingTier || refreshCooldown > 0) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                                        onClick={() => {
+                                            setShowDropdown(false);
+                                            if (isPlusUser) {
+                                                setShowCancelPopup(true);
+                                            } else {
+                                                window.open('https://ilmenite.vercel.app/', '_blank');
+                                            }
+                                        }}
+                                        className={`text-[12px] font-bold px-4 py-2 rounded-lg flex-shrink-0 transition-colors shadow-sm ${
+                                            isPlusUser 
+                                            ? 'bg-white/50 dark:bg-[#2a2a2a]/50 border border-black/5 dark:border-white/10 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 transition-all duration-200' 
+                                            : 'bg-white/50 dark:bg-[#2a2a2a]/50 border border-black/5 dark:border-white/10 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-all duration-200'
                                         }`}
-                                        title={refreshCooldown > 0 ? `Refresh available in ${refreshCooldown}s` : "Refresh Subscription Status"}
                                     >
-                                        <RefreshCw size={14} className={isCheckingTier ? "animate-spin text-blue-500" : ""} />
+                                        {isPlusUser ? 'Cancel Subscription' : 'Upgrade'}
                                     </button>
-                                )}
+                                </div>
+                            </div>
+
+                            <div className="h-px bg-black/5 dark:bg-white/10 w-full" />
+
+                            <div className="flex items-center justify-between w-full pt-0.5">
+                                <span className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[190px]" title={email || ''}>
+                                    {email || 'User Account'}
+                                </span>
                                 <button
                                     onClick={() => {
                                         setShowDropdown(false);
-                                        if (isPlusUser) {
-                                            setShowCancelPopup(true);
-                                        } else {
-                                            window.open('https://ilmenite.vercel.app/', '_blank');
-                                        }
+                                        setShowDeletePopup(true);
                                     }}
-                                    className={`text-[12px] font-bold px-4 py-2 rounded-lg flex-shrink-0 transition-colors shadow-sm ${
-                                        isPlusUser 
-                                        ? 'bg-white/50 dark:bg-[#2a2a2a]/50 border border-black/5 dark:border-white/10 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 transition-all duration-200' 
-                                        : 'bg-white/50 dark:bg-[#2a2a2a]/50 border border-black/5 dark:border-white/10 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-all duration-200'
-                                    }`}
+                                    className="text-[12px] font-bold px-4 py-2 rounded-lg flex-shrink-0 shadow-sm bg-white/50 dark:bg-[#2a2a2a]/50 border border-black/5 dark:border-white/10 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 transition-all duration-200 flex items-center gap-1.5 cursor-pointer"
+                                    title="Permanently Delete Account"
                                 >
-                                    {isPlusUser ? 'Cancel Subscription' : 'Upgrade'}
+                                    <Trash2 size={13} />
+                                    <span>Delete Account</span>
                                 </button>
                             </div>
                         </div>
@@ -346,6 +425,45 @@ const AccountBar: React.FC<AccountBarProps> = () => {
                 document.body
             )}
 
+
+            {showDeletePopup && createPortal(
+                <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                    <div className="bg-white dark:bg-[#1e1e1e] p-6 rounded-xl shadow-2xl max-w-sm w-full border border-gray-200 dark:border-gray-800">
+                        <h3 className="text-lg font-bold mb-2 text-red-600 dark:text-red-400 flex items-center gap-2">
+                            <Trash2 size={20} />
+                            Delete Account?
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-300 mb-6 text-xs leading-relaxed">
+                            This action is <strong>permanent</strong> and <strong>irreversible</strong>.
+                            Your account, all saved problem codes, custom templates, cloud settings, and any active subscription will be permanently removed.
+                        </p>
+                        <div className="flex justify-end gap-2.5">
+                            <button 
+                                disabled={isDeletingAccount}
+                                onClick={() => setShowDeletePopup(false)}
+                                className="px-3.5 py-2 text-xs font-semibold rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                disabled={isDeletingAccount}
+                                onClick={confirmDeleteAccount}
+                                className="px-3.5 py-2 text-xs font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+                            >
+                                {isDeletingAccount ? (
+                                    <>
+                                        <RefreshCw size={12} className="animate-spin" />
+                                        <span>Deleting...</span>
+                                    </>
+                                ) : (
+                                    <span>Permanently Delete</span>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
             {showLogoutPopup && createPortal(
                 <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
                     <div className="bg-white dark:bg-[#1e1e1e] p-6 rounded-lg shadow-xl max-w-sm w-full mx-4 border border-gray-200 dark:border-gray-800">

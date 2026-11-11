@@ -5,6 +5,7 @@
   "description": "Provides in-browser Monaco IDE, custom testcases, snippets, autocomplete, cloud sync, and customizable dark theme for Codeforces",
   "author": "Chittidi Satyanarayana",
   "short_name": "Ilmenite",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyVtXPDEmBftKc9iVSEkqNtX/r/2S1E+oXIbKv4794PKE/bXmBshGrwsuwVJqYf55SMIqWyKYY+XiCt7xdiMo1pgmSSht5qhgVRahGVsYIdJYkH6WasF8iE7uTL8VlHFWV5WgaXyTE60/xgaEGaZxiBcg6cGJsMN/LPAKRQv9kkDIYeWJJPU9AIN81JNmJa0dMbR+ZVeVrHYHsY/EoG60HHZpOhATSrpkqWHvf7kTHg4BI/+rbtM3CnHpevJlWS8rOyptf41x5KNX9Pdj+Pc4CkDr8rhhw5fqfndXeJrEgqQZ7olVKTP++UmVgeUf8VoVeTsxImifrCBqIrrbmR2geQIDAQAB",
   "action": {
     "default_popup": "index.html"
   },
