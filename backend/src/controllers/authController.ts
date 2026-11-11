@@ -64,8 +64,8 @@ export const sendOtp = async (req: AuthenticatedRequest, res: Response): Promise
             lastSentAt: Date.now()
         });
 
-        // Dispatch Email using multi-provider service (Resend / Brevo / SMTP / Console fallback)
-        const emailResult = await sendOtpEmail(normalizedEmail, otpCode, purpose);
+        // Dispatch Email using Brevo API (or console fallback)
+        const emailResult = await sendOtpEmail(normalizedEmail, otpCode);
 
         res.json({
             success: true,
