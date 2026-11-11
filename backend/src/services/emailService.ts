@@ -24,29 +24,33 @@ async function sendViaBrevo(
     otp: string,
     htmlContent: string
 ): Promise<SendOtpResult> {
-    const senderEmail = process.env.BREVO_SENDER_EMAIL || 'no-reply@ilmenite.dev';
+    const cleanKey = apiKey.trim().replace(/^["']|["']$/g, '');
+    const cleanSender = (process.env.BREVO_SENDER_EMAIL || 'no-reply@ilmenite.dev').trim().replace(/^["']|["']$/g, '');
+    const cleanTo = toEmail.trim().toLowerCase();
 
     try {
         const res = await fetch('https://api.brevo.com/v3/smtp/email', {
             method: 'POST',
             headers: {
-                'api-key': apiKey,
+                'api-key': cleanKey,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
             body: JSON.stringify({
-                sender: { name: 'Ilmenite', email: senderEmail },
-                to: [{ email: toEmail }],
+                sender: { name: 'Ilmenite', email: cleanSender },
+                to: [{ email: cleanTo }],
                 subject: 'Verify your Ilmenite account',
-                htmlContent
+                htmlContent,
+                textContent: `Your Ilmenite verification code is: ${otp}. This code is valid for 10 minutes. If you did not request this, please ignore this email.`
             })
         });
 
         const data: any = await res.json();
         if (res.ok) {
-            console.log(`[BREVO-API] Email dispatched via HTTPS to ${toEmail} (MessageId: ${data.messageId})`);
+            console.log(`[BREVO-API] ✓ Email successfully queued by Brevo for ${cleanTo} (MessageId: ${data.messageId})`);
             return { success: true, delivered: true, messageId: data.messageId };
         } else {
+            console.error(`[BREVO-API ERROR] Status: ${res.status}, Response:`, JSON.stringify(data));
             throw new Error(data.message || 'Brevo API returned error');
         }
     } catch (err: any) {
